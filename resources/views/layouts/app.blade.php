@@ -39,5 +39,9 @@
                 </div>
             </div>
         </div>
+
+        {{-- Tempat halaman menyisipkan skrip sendiri, mis. baris dinamis
+             pada form transaksi: @push('skrip') ... @endpush --}}
+        @stack('skrip')
     </body>
 </html>

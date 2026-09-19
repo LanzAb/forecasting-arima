@@ -163,7 +163,33 @@ Sudah disiapkan di `.vscode/`:
 
 ---
 
-## 5. Status Pengerjaan
+## 5. Database
+
+Seluruh lingkungan memakai **MySQL/MariaDB** (Laragon), tidak ada lagi SQLite.
+
+| Lingkungan | Database | Diatur di |
+|---|---|---|
+| Aplikasi (development) | `db_peramalan_pande` | `.env` |
+| Pengujian (`php artisan test`) | `db_peramalan_pande_test` | `phpunit.xml` |
+
+Database pengujian sengaja **dipisah** karena test memakai `RefreshDatabase`:
+seluruh tabel dihapus dan dibuat ulang setiap kali test dijalankan. Bila
+diarahkan ke `db_peramalan_pande`, data seeder penjualan historis 36 bulan yang
+dipakai untuk uji ARIMA akan ikut terhapus.
+
+**Menyiapkan di komputer baru** (sekali saja, sebelum `php artisan test`):
+
+```sql
+CREATE DATABASE db_peramalan_pande_test
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+Migration tidak perlu dijalankan manual pada database test — `RefreshDatabase`
+yang mengurusnya.
+
+---
+
+## 6. Status Pengerjaan
 
 | Tahap | Status |
 |---|---|
@@ -177,9 +203,12 @@ Sudah disiapkan di `.vscode/`:
 | 27 model Eloquent + relasi | Selesai |
 | Seeder master, BOM, & penjualan historis 36 bulan | Selesai |
 | Uji asap layout + sidebar (27 test lolos) | Selesai |
-| CRUD master data | Belum |
-| Import Excel | Belum |
-| Modul produksi + BOM | Belum |
+| CRUD master data | Sebagian (kategori, supplier, pelanggan, tahapan produksi, barang selesai; pengguna belum) |
+| Fondasi stok (`StockMutator` + observer + halaman persediaan) | Selesai |
+| Transaksi pembelian + penerimaan barang | Selesai |
+| Transaksi penjualan | Selesai |
+| Import Excel penjualan | Selesai (import pembelian belum, ditandai opsional di roadmap) |
+| Modul produksi + BOM | Selesai |
 | Perhitungan waktu tunggu operasional | Belum |
 | Service ARIMA (Box-Jenkins) | Belum |
 | Target produksi + BOM explosion | Belum |

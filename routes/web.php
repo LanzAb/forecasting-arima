@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,9 +27,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Satu-satunya route non-profil di berkas ini, bawaan Breeze. Isinya dialihkan
+// ke DashboardController (milik Modul A) tanpa menambah route baru.
+Route::get('/dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // Profil pengguna (bawaan Breeze)
 Route::middleware('auth')->group(function () {

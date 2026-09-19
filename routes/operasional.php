@@ -14,7 +14,31 @@
 |
 */
 
+use App\Http\Controllers\Master\BarangController;
+use App\Http\Controllers\Master\KategoriController;
+use App\Http\Controllers\Master\PelangganController;
+use App\Http\Controllers\Master\SupplierController;
+use App\Http\Controllers\Master\TahapanProduksiController;
+use App\Http\Controllers\Pembelian\PembelianController;
+use App\Http\Controllers\Pembelian\PenerimaanController;
+use App\Http\Controllers\Penjualan\ImportPenjualanController;
+use App\Http\Controllers\Penjualan\PenjualanController;
+use App\Http\Controllers\Persediaan\MutasiStokController;
+use App\Http\Controllers\Persediaan\OpnameController;
+use App\Http\Controllers\Persediaan\StokController;
+use App\Http\Controllers\Produksi\BomController;
+use App\Http\Controllers\Produksi\ProduksiController;
+use App\Models\TahapanProduksi;
 use Illuminate\Support\Facades\Route;
+
+/*
+ * Parameter {tahapan} pada menu produksi diikat ke kolom kode_tahapan
+ * (mis. TP-01), bukan ke id. Kode lebih stabil daripada nama yang boleh
+ * diubah pengguna, dan lebih mudah dibaca di alamat halaman daripada id.
+ */
+Route::bind('tahapan', fn (string $nilai) => TahapanProduksi::query()
+    ->where('kode_tahapan', strtoupper($nilai))
+    ->firstOrFail());
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -22,11 +46,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // MASTER DATA
     // -----------------------------------------------------------------
     Route::prefix('master')->name('master.')->group(function () {
-        // Route::resource('kategori', KategoriController::class);
-        // Route::resource('barang', BarangController::class);
-        // Route::resource('supplier', SupplierController::class);
-        // Route::resource('pelanggan', PelangganController::class);
-        // Route::resource('tahapan-produksi', TahapanProduksiController::class);
+        Route::resource('kategori', KategoriController::class);
+        Route::resource('barang', BarangController::class);
+        Route::resource('supplier', SupplierController::class);
+        Route::resource('pelanggan', PelangganController::class);
+        Route::resource('tahapan-produksi', TahapanProduksiController::class);
         // Route::resource('pengguna', PenggunaController::class)->middleware('role:admin');
     });
 
@@ -34,8 +58,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // PEMBELIAN
     // -----------------------------------------------------------------
     Route::prefix('pembelian')->name('pembelian.')->group(function () {
-        // Route::resource('order', PembelianController::class);
-        // Route::get('riwayat', [PembelianController::class, 'riwayat'])->name('riwayat');
+        Route::get('riwayat', [PembelianController::class, 'riwayat'])->name('riwayat');
+        Route::resource('order', PembelianController::class);
+
+        // Dua tindakan yang mengubah keadaan order, di luar CRUD biasa.
+        Route::post('order/{order}/terima', [PenerimaanController::class, 'store'])->name('order.terima');
+        Route::post('order/{order}/batal', [PembelianController::class, 'batal'])->name('order.batal');
+
         // Route::post('import', [ImportPembelianController::class, 'store'])->name('import');
     });
 
@@ -43,28 +72,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // PRODUKSI
     // -----------------------------------------------------------------
     Route::prefix('produksi')->name('produksi.')->group(function () {
-        // Route::resource('bom', BomController::class);
-        //
-        // Lima menu tahapan memakai SATU controller yang sama,
-        // dibedakan oleh parameter {tahapan}:
-        // Route::resource('perintah/{tahapan}', ProduksiController::class);
+        Route::resource('bom', BomController::class);
+
+        // Lima menu tahapan memakai SATU controller yang sama, dibedakan oleh
+        // parameter {tahapan} yang diikat ke kolom kode_tahapan (lihat Route::bind
+        // di bawah berkas ini). Menambah tahapan cukup lewat master Tahapan
+        // Produksi — tidak perlu menyentuh kode maupun route.
+        Route::prefix('perintah/{tahapan}')->name('perintah.')->group(function () {
+            Route::post('{perintah}/mulai', [ProduksiController::class, 'mulai'])->name('mulai');
+            Route::post('{perintah}/realisasi', [ProduksiController::class, 'realisasi'])->name('realisasi');
+            Route::post('{perintah}/selesaikan', [ProduksiController::class, 'selesaikan'])->name('selesaikan');
+            Route::post('{perintah}/batal', [ProduksiController::class, 'batal'])->name('batal');
+        });
+
+        Route::resource('perintah/{tahapan}', ProduksiController::class)
+            ->parameters(['{tahapan}' => 'perintah'])
+            ->names('perintah');
     });
 
     // -----------------------------------------------------------------
     // PERSEDIAAN
     // -----------------------------------------------------------------
     Route::prefix('persediaan')->name('persediaan.')->group(function () {
-        // Route::get('stok', [StokController::class, 'index'])->name('stok');
-        // Route::get('mutasi', [MutasiStokController::class, 'index'])->name('mutasi');
-        // Route::resource('opname', OpnameController::class);
+        Route::get('stok', [StokController::class, 'index'])->name('stok');
+        Route::get('mutasi', [MutasiStokController::class, 'index'])->name('mutasi');
+
+        // Hanya index/create/store: catatan opname tidak boleh diubah atau
+        // dihapus. Salah hitung diperbaiki dengan mencatat opname baru.
+        Route::resource('opname', OpnameController::class)->only(['index', 'create', 'store']);
     });
 
     // -----------------------------------------------------------------
     // PENJUALAN
     // -----------------------------------------------------------------
     Route::prefix('penjualan')->name('penjualan.')->group(function () {
-        // Route::resource('faktur', PenjualanController::class);
-        // Route::post('import', [ImportPenjualanController::class, 'store'])->name('import');
+        Route::resource('faktur', PenjualanController::class);
+
+        // Import Excel: jalan masuk data penjualan masa lalu untuk bahan ARIMA.
+        Route::get('import', [ImportPenjualanController::class, 'form'])->name('import.form');
+        Route::get('import/template', [ImportPenjualanController::class, 'template'])->name('import.template');
+        Route::post('import', [ImportPenjualanController::class, 'store'])->name('import.store');
     });
 
     // -----------------------------------------------------------------

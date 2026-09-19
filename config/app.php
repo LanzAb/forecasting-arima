@@ -60,12 +60,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions.
+    |
+    | Diubah dari bawaan "UTC" menjadi waktu Indonesia Barat, karena seluruh
+    | transaksi dicatat oleh staf di Mojokerto. Dengan UTC, pencatatan yang
+    | dilakukan antara pukul 00.00-07.00 WIB akan dianggap sistem sebagai
+    | tanggal esok hari, sehingga validasi "tanggal tidak boleh di masa depan"
+    | menolak transaksi yang sebenarnya sah.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
 
     /*
     |--------------------------------------------------------------------------

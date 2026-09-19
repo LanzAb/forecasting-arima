@@ -15,11 +15,16 @@
 <div>
     <p class="{{ $headClass }}">Master Data</p>
     <div class="space-y-0.5">
-        <a href="#" class="{{ $itemClass }}">Data Kategori</a>
-        <a href="#" class="{{ $itemClass }}">Data Barang</a>
-        <a href="#" class="{{ $itemClass }}">Data Supplier</a>
-        <a href="#" class="{{ $itemClass }}">Data Pelanggan</a>
-        <a href="#" class="{{ $itemClass }}">Tahapan Produksi</a>
+        <a href="{{ route('master.kategori.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('master.kategori.*')])>Data Kategori</a>
+        <a href="{{ route('master.barang.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('master.barang.*')])>Data Barang</a>
+        <a href="{{ route('master.supplier.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('master.supplier.*')])>Data Supplier</a>
+        <a href="{{ route('master.pelanggan.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('master.pelanggan.*')])>Data Pelanggan</a>
+        <a href="{{ route('master.tahapan-produksi.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('master.tahapan-produksi.*')])>Tahapan Produksi</a>
         @if (auth()->user()?->role === 'admin')
             <a href="#" class="{{ $itemClass }}">Pengguna</a>
         @endif
@@ -29,23 +34,42 @@
 <div>
     <p class="{{ $headClass }}">Transaksi &amp; Operasional</p>
     <div class="space-y-0.5">
-        <a href="#" class="{{ $itemClass }}">Pembelian</a>
-        <a href="#" class="{{ $itemClass }}">Riwayat Pembelian Bahan</a>
+        <a href="{{ route('pembelian.order.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('pembelian.order.*')])>Pembelian</a>
+        <a href="{{ route('pembelian.riwayat') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('pembelian.riwayat')])>Riwayat Pembelian Bahan</a>
 
         <p class="px-3 pt-3 pb-1 text-xs font-medium text-gray-500">Produksi</p>
-        <a href="#" class="{{ $itemClass }}">BOM / Komposisi</a>
-        <a href="#" class="{{ $itemClass }}">Produksi Kepala</a>
-        <a href="#" class="{{ $itemClass }}">Produksi Handle</a>
-        <a href="#" class="{{ $itemClass }}">Proses Coating</a>
-        <a href="#" class="{{ $itemClass }}">Perakitan Sekop</a>
-        <a href="#" class="{{ $itemClass }}">Proses Pengemasan</a>
+        <a href="{{ route('produksi.bom.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('produksi.bom.*')])>BOM / Komposisi</a>
+
+        {{--
+            Menu tahapan dibangkitkan dari master Tahapan Produksi, bukan ditulis
+            satu per satu. Dengan begitu menambah atau mengganti nama tahapan
+            cukup dilakukan lewat halaman master, tanpa menyentuh berkas ini.
+        --}}
+        @foreach (\App\Models\TahapanProduksi::where('is_aktif', true)->orderBy('urutan')->get() as $tahapanMenu)
+            <a href="{{ route('produksi.perintah.index', $tahapanMenu->kode_tahapan) }}"
+               @class([
+                   $itemClass,
+                   'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('produksi.perintah.*')
+                       && request()->route('tahapan')?->id === $tahapanMenu->id,
+               ])>{{ $tahapanMenu->nama_tahapan }}</a>
+        @endforeach
 
         <p class="px-3 pt-3 pb-1 text-xs font-medium text-gray-500">Persediaan</p>
-        <a href="#" class="{{ $itemClass }}">Stok Saat Ini</a>
-        <a href="#" class="{{ $itemClass }}">Mutasi Stok</a>
+        <a href="{{ route('persediaan.stok') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('persediaan.stok')])>Stok Saat Ini</a>
+        <a href="{{ route('persediaan.mutasi') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('persediaan.mutasi')])>Mutasi Stok</a>
+        <a href="{{ route('persediaan.opname.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('persediaan.opname.*')])>Stok Opname</a>
 
         <p class="px-3 pt-3 pb-1 text-xs font-medium text-gray-500">Penjualan</p>
-        <a href="#" class="{{ $itemClass }}">Transaksi Penjualan</a>
+        <a href="{{ route('penjualan.faktur.index') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('penjualan.faktur.*')])>Transaksi Penjualan</a>
+        <a href="{{ route('penjualan.import.form') }}"
+           @class([$itemClass, 'bg-gray-900 text-white hover:bg-gray-900' => request()->routeIs('penjualan.import.*')])>Import Penjualan</a>
     </div>
 </div>
 
