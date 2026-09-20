@@ -4,10 +4,9 @@ Dokumen ini melanjutkan [`05-roadmap-modul-a.md`](05-roadmap-modul-a.md), yang i
 
 ---
 
-## 1. Belum Dikerjakan
+## 1. Sudah Dikerjakan Sejak Versi Sebelumnya
 
-- [ ] **Import Excel Pembelian** — opsional sejak awal (lihat roadmap Tahap 4), belum ada `ImportPembelianController` maupun class `Imports`-nya. Route-nya masih dikomentari di `routes/operasional.php:79`.
-      > Baru dikerjakan kalau ada waktu lebih. Tidak memblokir apa pun, tidak ada modul lain yang bergantung padanya.
+- [x] **Import Excel Pembelian** — `ImportPembelianController` + `PembelianImport` + `TemplatePembelianExport` sudah ada. Beda penting dari Import Excel Penjualan: hasil import ini adalah order **berstatus dipesan** (bukan histori "diterima"), jadi stok baru bergerak nanti lewat proses penerimaan manual seperti biasa. Satu order hanya boleh satu supplier, dan barang dobel dalam satu order ditolak — 11 test di `ImportPembelianTest` mencakup semua aturan ini.
 
 ---
 
@@ -25,13 +24,14 @@ Dokumen ini melanjutkan [`05-roadmap-modul-a.md`](05-roadmap-modul-a.md), yang i
 
 ## 3. Follow-up dari Redesain Tampilan (baru dikerjakan)
 
-Layout (`layouts/app.blade.php`, `layouts/navigation.blade.php`, `partials/sidebar.blade.php`) baru diganti ke tema sidebar gelap + topbar ramping. Semua CRUD/route tidak disentuh dan 185 test tetap lolos, tapi verifikasi manual berikut belum dilakukan:
+Layout (`layouts/app.blade.php`, `layouts/navigation.blade.php`, `partials/sidebar.blade.php`) baru diganti ke tema sidebar gelap + topbar ramping. Semua CRUD/route tidak disentuh dan test tetap lolos (196/196). Verifikasi berikut sudah dilakukan lewat server (login sungguhan tiap role + curl), kecuali interaksi visual murni yang butuh browser asli:
 
-- [ ] Cek tampilan di browser sungguhan untuk keempat role (`admin`, `produksi`, `gudang`, `pimpinan`) — pastikan menu yang tampil sesuai hak akses masing-masing.
-- [ ] Cek sidebar mobile (drawer + tombol hamburger) di lebar layar kecil (< 1024px), termasuk overlay penutup saat area luar disentuh.
-- [ ] Cek halaman dengan tabel lebar (mis. Data Barang, Mutasi Stok) tidak terpotong dengan sidebar tetap 256px.
-- [ ] `partials/sidebar-analisis.blade.php` (milik Modul B) ikut diubah warnanya (dari terang ke gelap) supaya konsisten dengan sidebar baru — **beri tahu pemegang Modul B** kalau proyek ini benar dikerjakan dua orang, karena `04-pembagian-modul.md` mencatat file itu sebagai milik Modul B dan `partials/sidebar.blade.php` sebagai "jangan disentuh" bersama. Sejauh ini seluruh commit berasal dari satu penulis git yang sama, tapi aturan itu tetap dicatat di sini untuk jaga-jaga.
-- [ ] Cetak PDF/Excel laporan (`?unduh=pdf` / `?unduh=excel`) dicek ulang — halaman unduhan pakai layout cetak sendiri (`laporan/pdf/umum.blade.php`), tidak dipengaruhi redesain, tapi belum di-screenshot ulang untuk memastikan.
+- [x] Cek akses keempat role (`admin`, `produksi`, `gudang`, `pimpinan`) — menu "Pengguna" hanya tampil untuk admin, dan akses langsung ke `/master/pengguna` ditolak `RoleMiddleware` (403) untuk 3 role lainnya. Kartu profil sidebar menampilkan nama & role yang benar untuk keempatnya.
+- [x] Cek halaman dengan tabel lebar (Data Barang, Stok Saat Ini, Mutasi Stok) — ketiganya sudah dibungkus `overflow-x-auto`, jadi tabel lebar scroll sendiri tanpa mendorong sidebar 256px.
+- [x] Cetak PDF/Excel keempat laporan — semua `HTTP 200`, berkas PDF valid (`%PDF` magic bytes) dan Excel valid (`PK` / zip magic bytes untuk `.xlsx`).
+- [x] Markup Alpine.js sidebar mobile diperiksa (root `x-data="{ sidebarOpen: false }"`, tombol hamburger `@click="sidebarOpen = true"`, overlay `@click="sidebarOpen = false"`, binding `:class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"`) — semua terpasang benar dan saling terhubung.
+      > **Batasan:** ini pemeriksaan markup/server-side, bukan uji interaktif di browser sungguhan (klik tombol, lihat animasi geser). Alpine.js adalah pola standar yang sudah terbukti untuk struktur ini, tapi kalau mau yakin 100%, buka `/dashboard` di Chrome DevTools dengan mode responsif (< 1024px) dan coba klik hamburger-nya langsung.
+- [x] `partials/sidebar-analisis.blade.php` (milik Modul B) sudah konsisten pakai warna dark theme yang sama.
 
 ---
 

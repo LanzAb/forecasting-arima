@@ -41,6 +41,8 @@
            @class([$itemClass, 'bg-indigo-600 text-white hover:bg-indigo-600' => request()->routeIs('pembelian.riwayat')])>Riwayat Pembelian Bahan</a>
         <a href="{{ route('pembelian.rekomendasi.index') }}"
            @class([$itemClass, 'bg-indigo-600 text-white hover:bg-indigo-600' => request()->routeIs('pembelian.rekomendasi.*')])>Rekomendasi Pembelian</a>
+        <a href="{{ route('pembelian.import.form') }}"
+           @class([$itemClass, 'bg-indigo-600 text-white hover:bg-indigo-600' => request()->routeIs('pembelian.import.*')])>Import Pembelian</a>
 
         <p class="px-3 pt-3 pb-1 text-xs font-medium text-gray-500 uppercase tracking-wide">Produksi</p>
         <a href="{{ route('produksi.bom.index') }}"

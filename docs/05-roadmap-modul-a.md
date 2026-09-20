@@ -113,7 +113,7 @@ Keputusan penting saat pengerjaan:
 
 > Import Excel Penjualan penting didahulukan dari laporan: inilah jalan masuk **data penjualan asli 3 tahun CV. Pande Sejahtera** untuk menggantikan data dummy. Selama masih dummy, hasil simulasi Modul B belum bisa dipakai di laporan skripsi.
 
-- [ ] **Import Excel Pembelian** (opsional, bisa belakangan)
+- [x] **Import Excel Pembelian** — beda dari Import Excel Penjualan: hasilnya order **berstatus dipesan**, persis order manual, jadi stok tidak tersentuh sampai diterima satu per satu
 
 ---
 

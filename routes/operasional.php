@@ -24,6 +24,7 @@ use App\Http\Controllers\Master\PelangganController;
 use App\Http\Controllers\Master\PenggunaController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\TahapanProduksiController;
+use App\Http\Controllers\Pembelian\ImportPembelianController;
 use App\Http\Controllers\Pembelian\PembelianController;
 use App\Http\Controllers\Pembelian\PenerimaanController;
 use App\Http\Controllers\Pembelian\RekomendasiController;
@@ -76,7 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('rekomendasi', [RekomendasiController::class, 'index'])->name('rekomendasi.index');
         Route::post('rekomendasi', [RekomendasiController::class, 'store'])->name('rekomendasi.store');
 
-        // Route::post('import', [ImportPembelianController::class, 'store'])->name('import');
+        Route::get('import', [ImportPembelianController::class, 'form'])->name('import.form');
+        Route::get('import/template', [ImportPembelianController::class, 'template'])->name('import.template');
+        Route::post('import', [ImportPembelianController::class, 'store'])->name('import.store');
     });
 
     // -----------------------------------------------------------------

@@ -207,7 +207,7 @@ yang mengurusnya.
 | Fondasi stok (`StockMutator` + observer + halaman persediaan) | Selesai |
 | Transaksi pembelian + penerimaan barang | Selesai |
 | Transaksi penjualan | Selesai |
-| Import Excel penjualan | Selesai (import pembelian belum, ditandai opsional di roadmap) |
+| Import Excel penjualan & pembelian | Selesai |
 | Modul produksi + BOM | Selesai |
 | Perhitungan waktu tunggu operasional | Belum |
 | Service ARIMA (Box-Jenkins) | Belum |
