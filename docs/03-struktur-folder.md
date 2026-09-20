@@ -203,7 +203,7 @@ yang mengurusnya.
 | 27 model Eloquent + relasi | Selesai |
 | Seeder master, BOM, & penjualan historis 36 bulan | Selesai |
 | Uji asap layout + sidebar (27 test lolos) | Selesai |
-| CRUD master data | Sebagian (kategori, supplier, pelanggan, tahapan produksi, barang selesai; pengguna belum) |
+| CRUD master data (kategori, supplier, pelanggan, tahapan, barang, pengguna) | Selesai |
 | Fondasi stok (`StockMutator` + observer + halaman persediaan) | Selesai |
 | Transaksi pembelian + penerimaan barang | Selesai |
 | Transaksi penjualan | Selesai |
@@ -213,5 +213,6 @@ yang mengurusnya.
 | Service ARIMA (Box-Jenkins) | Belum |
 | Target produksi + BOM explosion | Belum |
 | **Modul simulasi & perbandingan skenario** | **Belum — prioritas utama** |
-| Laporan & export PDF | Belum |
+| Laporan & export PDF/Excel | Selesai |
+| Dashboard, manajemen pengguna, tombol rekomendasi | Selesai |
 | Deploy ke hosting | Belum |

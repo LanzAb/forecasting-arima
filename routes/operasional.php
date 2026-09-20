@@ -16,11 +16,17 @@
 
 use App\Http\Controllers\Master\BarangController;
 use App\Http\Controllers\Master\KategoriController;
+use App\Http\Controllers\Laporan\LaporanPembelianController;
+use App\Http\Controllers\Laporan\LaporanPenjualanController;
+use App\Http\Controllers\Laporan\LaporanPersediaanController;
+use App\Http\Controllers\Laporan\LaporanProduksiController;
 use App\Http\Controllers\Master\PelangganController;
+use App\Http\Controllers\Master\PenggunaController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\TahapanProduksiController;
 use App\Http\Controllers\Pembelian\PembelianController;
 use App\Http\Controllers\Pembelian\PenerimaanController;
+use App\Http\Controllers\Pembelian\RekomendasiController;
 use App\Http\Controllers\Penjualan\ImportPenjualanController;
 use App\Http\Controllers\Penjualan\PenjualanController;
 use App\Http\Controllers\Persediaan\MutasiStokController;
@@ -51,7 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('supplier', SupplierController::class);
         Route::resource('pelanggan', PelangganController::class);
         Route::resource('tahapan-produksi', TahapanProduksiController::class);
-        // Route::resource('pengguna', PenggunaController::class)->middleware('role:admin');
+        Route::resource('pengguna', PenggunaController::class)->middleware('role:admin');
     });
 
     // -----------------------------------------------------------------
@@ -64,6 +70,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Dua tindakan yang mengubah keadaan order, di luar CRUD biasa.
         Route::post('order/{order}/terima', [PenerimaanController::class, 'store'])->name('order.terima');
         Route::post('order/{order}/batal', [PembelianController::class, 'batal'])->name('order.batal');
+
+        // Titik temu dengan Modul B: membaca tabel kebutuhan_bahan yang diisi
+        // perhitungan target produksi, lalu mengubahnya menjadi order pembelian.
+        Route::get('rekomendasi', [RekomendasiController::class, 'index'])->name('rekomendasi.index');
+        Route::post('rekomendasi', [RekomendasiController::class, 'store'])->name('rekomendasi.store');
 
         // Route::post('import', [ImportPembelianController::class, 'store'])->name('import');
     });
@@ -118,10 +129,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // LAPORAN OPERASIONAL
     // -----------------------------------------------------------------
     Route::prefix('laporan')->name('laporan.')->group(function () {
-        // Route::get('pembelian', [LaporanPembelianController::class, 'index'])->name('pembelian');
-        // Route::get('produksi', [LaporanProduksiController::class, 'index'])->name('produksi');
-        // Route::get('persediaan', [LaporanPersediaanController::class, 'index'])->name('persediaan');
-        // Route::get('penjualan', [LaporanPenjualanController::class, 'index'])->name('penjualan');
+        // Keempatnya mewarisi LaporanController: satu halaman yang sama dapat
+        // ditampilkan di layar, diunduh PDF (?unduh=pdf), atau Excel (?unduh=excel).
+        Route::get('pembelian', [LaporanPembelianController::class, 'index'])->name('pembelian');
+        Route::get('produksi', [LaporanProduksiController::class, 'index'])->name('produksi');
+        Route::get('persediaan', [LaporanPersediaanController::class, 'index'])->name('persediaan');
+        Route::get('penjualan', [LaporanPenjualanController::class, 'index'])->name('penjualan');
     });
 
 });

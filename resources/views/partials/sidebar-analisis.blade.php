@@ -7,8 +7,8 @@
 --}}
 
 @php
-    $itemClass = 'block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100';
-    $headClass = 'px-3 mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400';
+    $itemClass = 'block px-3 py-2 rounded-md text-gray-300 hover:bg-gray-800 hover:text-white';
+    $headClass = 'px-3 mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500';
 @endphp
 
 <div>

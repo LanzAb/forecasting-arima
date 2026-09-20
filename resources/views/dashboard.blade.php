@@ -75,19 +75,54 @@
                 </div>
             </div>
 
-            @php $puncak = max(1, collect($trenPenjualan)->max('jumlah')); @endphp
+            @php
+                $puncak = max(1, collect($trenPenjualan)->max('jumlah'));
+                $lebarSvg = 1000;
+                $tinggiSvg = 200;
+                $margin = 12;
+                $jumlahTitik = count($trenPenjualan);
+                $langkah = $jumlahTitik > 1 ? ($lebarSvg - 2 * $margin) / ($jumlahTitik - 1) : 0;
 
-            <div class="mt-5 flex items-end gap-2 h-48">
-                @foreach ($trenPenjualan as $titik)
-                    <div class="flex-1 flex flex-col items-center justify-end h-full group">
-                        <span class="text-[10px] text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition">
-                            {{ number_format($titik['jumlah'], 0, ',', '.') }}
-                        </span>
-                        <div class="w-full rounded-t bg-indigo-500 hover:bg-indigo-600 transition-colors"
-                             style="height: {{ max(2, round($titik['jumlah'] / $puncak * 100)) }}%"
-                             title="{{ $titik['label'] }}: {{ number_format($titik['jumlah'], 0, ',', '.') }} unit"></div>
-                    </div>
-                @endforeach
+                $titikSvg = collect($trenPenjualan)->values()->map(function ($titik, $i) use ($margin, $langkah, $tinggiSvg, $puncak) {
+                    return [
+                        'x' => round($margin + $i * $langkah, 2),
+                        'y' => round($tinggiSvg - 16 - ($titik['jumlah'] / $puncak * ($tinggiSvg - 32)), 2),
+                        'label' => $titik['label'],
+                        'jumlah' => $titik['jumlah'],
+                    ];
+                });
+
+                $garisPoin = $titikSvg->map(fn ($p) => "{$p['x']},{$p['y']}")->implode(' ');
+                $areaPoin = "{$margin},{$tinggiSvg} {$garisPoin} " . ($lebarSvg - $margin) . ",{$tinggiSvg}";
+            @endphp
+
+            <div class="mt-5 h-56">
+                <svg viewBox="0 0 {{ $lebarSvg }} {{ $tinggiSvg }}" preserveAspectRatio="none" class="h-full w-full overflow-visible">
+                    <defs>
+                        <linearGradient id="trenGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="rgb(99 102 241)" stop-opacity="0.25" />
+                            <stop offset="100%" stop-color="rgb(99 102 241)" stop-opacity="0" />
+                        </linearGradient>
+                    </defs>
+
+                    <polygon points="{{ $areaPoin }}" fill="url(#trenGradient)" />
+
+                    <polyline points="{{ $garisPoin }}"
+                              fill="none"
+                              stroke="rgb(79 70 229)"
+                              stroke-width="2.5"
+                              stroke-linejoin="round"
+                              stroke-linecap="round"
+                              vector-effect="non-scaling-stroke" />
+
+                    @foreach ($titikSvg as $p)
+                        <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="3.5"
+                                fill="white" stroke="rgb(79 70 229)" stroke-width="2"
+                                vector-effect="non-scaling-stroke">
+                            <title>{{ $p['label'] }}: {{ number_format($p['jumlah'], 0, ',', '.') }} unit</title>
+                        </circle>
+                    @endforeach
+                </svg>
             </div>
 
             <div class="mt-2 flex gap-2">

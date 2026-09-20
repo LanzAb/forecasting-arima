@@ -15,28 +15,16 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+        <div x-data="{ sidebarOpen: false }" class="flex h-screen overflow-hidden bg-gray-50">
+            {{-- Menu dipecah per modul di dalam partial ini, lihat docs/04-pembagian-modul.md --}}
+            @include('partials.sidebar')
 
-            <div class="flex">
-                {{-- Menu dipecah per modul di dalam partial ini, lihat docs/04-pembagian-modul.md --}}
-                @include('partials.sidebar')
+            <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+                @include('layouts.navigation')
 
-                <div class="flex-1 min-w-0">
-                    <!-- Page Heading -->
-                    @isset($header)
-                        <header class="bg-white shadow">
-                            <div class="py-6 px-4 sm:px-6 lg:px-8">
-                                {{ $header }}
-                            </div>
-                        </header>
-                    @endisset
-
-                    <!-- Page Content -->
-                    <main class="p-4 sm:p-6 lg:p-8">
-                        {{ $slot }}
-                    </main>
-                </div>
+                <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                    {{ $slot }}
+                </main>
             </div>
         </div>
 

@@ -162,12 +162,32 @@ Validasi yang wajib ada: **stok bahan harus cukup** sebelum status boleh jadi `s
 
 ## Tahap 6 — Penutup
 
-- [ ] **Laporan Pembelian / Produksi / Persediaan / Penjualan** + export PDF & Excel
-- [ ] **Dashboard** — ringkasan stok, grafik tren penjualan, aktivitas terbaru
-- [ ] **Manajemen Pengguna** (khusus admin) — bisa disisipkan kapan saja, tidak memblokir apa pun
-- [ ] **Tombol "Buat Order dari Rekomendasi"** — membaca `kebutuhan_bahan` milik Modul B
+- [x] **Laporan Pembelian / Produksi / Persediaan / Penjualan** + export PDF & Excel
+- [x] **Dashboard** — ringkasan stok, grafik tren penjualan, aktivitas terbaru
+- [x] **Manajemen Pengguna** (khusus admin)
+- [x] **Tombol "Buat Order dari Rekomendasi"** — membaca `kebutuhan_bahan` milik Modul B
 
-> Tombol terakhir ini satu-satunya titik temu dengan Modul B. Kerjakan setelah rekan Anda selesai mengisi tabel `kebutuhan_bahan`.
+Keputusan penting saat pengerjaan:
+
+| Hal | Keputusan | Alasan |
+|---|---|---|
+| Empat laporan | Mewarisi satu `LaporanController` abstrak | Keempatnya berbentuk sama (rentang tanggal, tabel, ringkasan, 3 cara tampil). Tanpa induk bersama, kode cetak PDF dan export Excel tersalin empat kali |
+| Cara unduh | Halaman yang sama dengan `?unduh=pdf` / `?unduh=excel` | Penyaring yang sedang dipakai ikut terbawa ke berkas unduhan, tanpa perlu route terpisah |
+| Isi laporan | Hanya transaksi yang terwujud (pembelian diterima, produksi selesai) | Order yang masih dipesan belum jadi biaya maupun stok |
+| Stok awal pada laporan persediaan | Dihitung mundur dari stok berjalan dikurangi mutasi | Sistem tidak menyimpan potret stok harian; rantai mutasi adalah satu-satunya sumber yang jujur |
+| Grafik dashboard | HTML + Tailwind, bukan Chart.js | Grafik batang 12 bulan tidak butuh pustaka; menghindari satu ketergantungan JavaScript baru |
+| Bulan kosong pada grafik | Tetap ditampilkan bernilai nol | Deret yang bolong menyesatkan saat dibaca |
+| Penjagaan pengguna | Tidak boleh menonaktifkan/menghapus diri sendiri; harus tersisa 1 admin aktif | Tanpa ini sangat mungkin seluruh akses pengelolaan terkunci tanpa jalan masuk |
+| Rekomendasi per supplier | Dikelompokkan, satu order satu supplier | Satu nota pembelian ditujukan ke satu pemasok |
+| Qty rekomendasi pecahan | Dibulatkan **ke atas** | Memesan setengah lembar tidak mungkin; kurang sedikit lebih merugikan daripada lebih sedikit |
+
+> **Titik temu dengan Modul B.** Tombol rekomendasi dikerjakan lebih dulu meski
+> tabel `kebutuhan_bahan` masih kosong, karena skema dan kontraknya sudah beku
+> sejak fase 0 dan model `KebutuhanBahan` sudah menyediakan `scopePerluBeli()`.
+> Halaman menampilkan keterangan "belum ada rekomendasi" selama Modul B belum
+> mengisi tabelnya. Uji coba memakai baris `kebutuhan_bahan` buatan sendiri yang
+> menirukan keluaran Modul B — **belum pernah diuji dengan data Modul B yang
+> sebenarnya.**
 
 ---
 

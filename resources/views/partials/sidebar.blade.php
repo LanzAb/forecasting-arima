@@ -12,26 +12,64 @@
     Tambahkan menu baru ke partial modul masing-masing.
 --}}
 
-<aside class="w-64 shrink-0 bg-white border-r border-gray-200 min-h-screen">
-    <div class="px-4 py-5 border-b border-gray-200">
-        <p class="text-sm font-semibold text-gray-900 leading-tight">CV. Pande Sejahtera</p>
-        <p class="text-xs text-gray-500 mt-0.5">Peramalan &amp; Perencanaan Stok</p>
+<!-- Overlay mobile, menutup sidebar saat area gelap di luar sidebar disentuh -->
+<div x-show="sidebarOpen"
+     x-transition:enter="transition-opacity ease-linear duration-200"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition-opacity ease-linear duration-150"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     @click="sidebarOpen = false"
+     class="fixed inset-0 z-30 bg-gray-900/50 lg:hidden"
+     style="display: none;"
+></div>
+
+<aside
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+    class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 flex-col bg-gray-900 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0"
+>
+    <div class="flex items-center gap-2 px-5 py-5">
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
+            PS
+        </div>
+        <div class="min-w-0">
+            <p class="truncate text-sm font-semibold leading-tight text-white">CV. Pande Sejahtera</p>
+            <p class="truncate text-xs text-gray-400">Peramalan &amp; Perencanaan Stok</p>
+        </div>
     </div>
 
-    <nav class="px-3 py-4 space-y-6 text-sm">
+    <nav class="flex-1 overflow-y-auto px-3 pb-4 text-sm">
+        <div class="space-y-0.5 pb-4">
+            <a href="{{ route('dashboard') }}"
+               @class([
+                   'flex items-center gap-2.5 rounded-md px-3 py-2 font-medium transition',
+                   'bg-indigo-600 text-white' => request()->routeIs('dashboard'),
+                   'text-gray-300 hover:bg-gray-800 hover:text-white' => ! request()->routeIs('dashboard'),
+               ])>
+                <svg class="h-4.5 w-4.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" style="width:1.125rem;height:1.125rem">
+                    <path d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-3a1 1 0 01-1-1v-3H9v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" />
+                </svg>
+                Dashboard
+            </a>
+        </div>
 
-        <a href="{{ route('dashboard') }}"
-           @class([
-               'flex items-center gap-2 px-3 py-2 rounded-md font-medium',
-               'bg-gray-900 text-white' => request()->routeIs('dashboard'),
-               'text-gray-700 hover:bg-gray-100' => ! request()->routeIs('dashboard'),
-           ])>
-            Dashboard
-        </a>
+        <div class="space-y-6">
+            @include('partials.sidebar-operasional')
 
-        @include('partials.sidebar-operasional')
-
-        @include('partials.sidebar-analisis')
-
+            @include('partials.sidebar-analisis')
+        </div>
     </nav>
+
+    <div class="border-t border-gray-800 px-4 py-4">
+        <div class="flex items-center gap-2.5">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-700 text-xs font-semibold text-white">
+                {{ strtoupper(substr(auth()->user()->name ?? '?', 0, 1)) }}
+            </div>
+            <div class="min-w-0">
+                <p class="truncate text-xs font-medium text-white">{{ auth()->user()->name }}</p>
+                <p class="truncate text-xs text-gray-400">{{ ucfirst(auth()->user()->role ?? '') }}</p>
+            </div>
+        </div>
+    </div>
 </aside>

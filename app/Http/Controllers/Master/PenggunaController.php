@@ -68,13 +68,16 @@ class PenggunaController extends Controller
 
     public function store(PenggunaRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $pengguna = User::create($request->validated());
 
         // Akun dibuat admin, jadi tidak melewati alur verifikasi email.
-        // Menandainya terverifikasi sejak awal agar pengguna dapat langsung masuk.
-        $data['email_verified_at'] = now();
-
-        $pengguna = User::create($data);
+        // Ditandai terverifikasi agar pengguna dapat langsung masuk — tanpa ini
+        // ia akan tertahan middleware 'verified' pada seluruh halaman.
+        //
+        // Disetel terpisah, bukan lewat User::create(), karena
+        // `email_verified_at` tidak termasuk $fillable pada model User yang
+        // sudah dibekukan sejak fase 0.
+        $pengguna->forceFill(['email_verified_at' => now()])->save();
 
         LogAktivitas::catat(self::MODUL, "Menambah pengguna {$pengguna->name} ({$pengguna->role})");
 
