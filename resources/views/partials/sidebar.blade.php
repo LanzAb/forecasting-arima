@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 pb-4 text-sm">
+    <nav id="sidebar-scroll" class="flex-1 overflow-y-auto px-3 pb-4 text-sm">
         <div class="space-y-0.5 pb-4">
             <a href="{{ route('dashboard') }}"
                @class([
@@ -60,6 +60,33 @@
             @include('partials.sidebar-analisis')
         </div>
     </nav>
+
+    {{--
+        Sidebar reload penuh tiap ganti halaman (bukan SPA), jadi posisi scroll
+        perlu disimpan manual. Tanpa ini, menu yang letaknya jauh di bawah
+        (mis. Peramalan) selalu balik ke atas tiap kali diklik.
+
+        Skrip ini SENGAJA inline & synchronous (bukan lewat app.js) supaya
+        posisi scroll langsung diterapkan saat elemen nav baru saja di-parse,
+        sebelum browser sempat menggambar sidebar di posisi atas. Kalau
+        dipasang lewat app.js (dimuat belakangan), sidebar akan sempat
+        kelihatan di atas dulu baru "meloncat", yang terlihat seperti kedip.
+    --}}
+    <script>
+        (function () {
+            var nav = document.getElementById('sidebar-scroll');
+            if (! nav) return;
+
+            var posisiTersimpan = sessionStorage.getItem('sidebarScroll');
+            if (posisiTersimpan !== null) {
+                nav.scrollTop = parseInt(posisiTersimpan, 10);
+            }
+
+            nav.addEventListener('scroll', function () {
+                sessionStorage.setItem('sidebarScroll', String(nav.scrollTop));
+            });
+        })();
+    </script>
 
     <div class="border-t border-gray-800 px-4 py-4">
         <div class="flex items-center gap-2.5">

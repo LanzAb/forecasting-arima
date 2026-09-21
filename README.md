@@ -1,59 +1,58 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistem Peramalan Penjualan & Perencanaan Stok (ARIMA)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Rancang Bangun Sistem Peramalan Penjualan Barang Berbasis Web Menggunakan Metode Box-Jenkins (ARIMA) untuk Perencanaan Stok. Skripsi untuk CV Pande Sejahtera, produsen sekop.
 
-## About Laravel
+Sistem ini punya dua bagian utama:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Modul Operasional**: master data, pembelian, produksi, persediaan, penjualan, import Excel, dan laporan.
+- **Modul Analisis & Peramalan**: peramalan penjualan dengan metode Box-Jenkins (ARIMA), perhitungan waktu tunggu & target produksi, serta simulasi backtest yang membandingkan kebijakan stok sistem dengan kebijakan perusahaan saat ini.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Tolak ukur keberhasilan sistem bukan akurasi ramalan (MAPE), melainkan apakah rencana stok yang dihasilkan sistem, saat diuji kembali (backtest) terhadap 12 bulan data historis, menghasilkan lebih sedikit overstock dan stockout dibanding kebijakan lama perusahaan.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Teknologi
 
-## Learning Laravel
+- Laravel 12 (PHP 8.2)
+- MySQL
+- Tailwind CSS + Alpine.js
+- Chart.js (grafik deret waktu, correlogram ACF/PACF, hasil forecast)
+- dompdf (laporan PDF), Laravel Excel (import/export)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Seluruh perhitungan statistik (regresi, uji ADF, ACF/PACF, dsb) ditulis manual dalam PHP tanpa library statistik eksternal. Lihat `app/Support/Math/` dan `app/Services/Arima/`.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Instalasi
 
-## Laravel Sponsors
+```bash
+composer install
+npm install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+cp .env.example .env
+php artisan key:generate
+```
 
-### Premium Partners
+Buat database MySQL kosong, lalu isi `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` di `.env` sesuai environment lokal.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+php artisan migrate --seed
+npm run build
 
-## Contributing
+php artisan serve
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+`migrate --seed` akan mengisi database dengan data dummy: master data, BOM, 36 bulan data penjualan historis, dan 4 akun pengguna (role `admin`, `produksi`, `gudang`, `pimpinan`), semua dengan password `password`.
 
-## Code of Conduct
+## Dokumentasi
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Dokumen desain sistem ada di folder [`docs/`](docs/):
 
-## Security Vulnerabilities
+- [`01-alur-kerja-sistem.md`](docs/01-alur-kerja-sistem.md): alur kerja & rumus perhitungan
+- [`02-erd.md`](docs/02-erd.md): ERD
+- [`03-struktur-folder.md`](docs/03-struktur-folder.md): struktur folder & konvensi
+- [`04-pembagian-modul.md`](docs/04-pembagian-modul.md): pembagian modul
+- [`05-roadmap-modul-a.md`](docs/05-roadmap-modul-a.md) & [`06-todolist-modul-a.md`](docs/06-todolist-modul-a.md): progres Modul Operasional
+- [`06-todolist-modul-b.md`](docs/06-todolist-modul-b.md): progres Modul Analisis & Peramalan
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Menjalankan Test
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test
+```

@@ -425,7 +425,11 @@ biaya_stockout(t) = stockout_unit(t) x biaya_stockout_per_unit
 | Perusahaan — `produksi_aktual` | Memakai angka produksi asli perusahaan bila datanya tersedia |
 | Perusahaan — `naif_bulan_lalu` | `rencana_produksi(t) = permintaan_aktual(t-1)` |
 | Perusahaan — `rata_rata_bergerak` | Rata-rata 3 bulan terakhir |
-| **Sistem** | `forecast(t) + SS - stok_awal(t) - barang dalam proses` |
+| **Sistem** | `SUM( forecast(t) .. forecast(t + CEIL(L_total/30)) ) + SS - stok_awal(t) - barang dalam proses` |
+
+> **Revisi (2026-09-21):** rumus di atas menetralkan permintaan **sepanjang waktu tunggu**
+> (`CEIL(L_total/30) + 1` bulan ke depan), bukan cuma `forecast(t)` satu bulan. Lihat
+> alasan revisi di §7.5 poin 4.
 
 ### 7.3 Metrik Perbandingan
 
@@ -463,6 +467,9 @@ Agar simulasi tidak dituduh mengada-ada saat sidang:
 1. Model ARIMA dibentuk **hanya** dari 24 bulan pertama. Data 12 bulan terakhir tidak pernah dilihat model saat pembentukan.
 2. Kedua skenario memakai stok awal, permintaan aktual, dan waktu tunggu yang **sama persis**. Yang berbeda hanya cara menentukan jumlah produksi.
 3. Seluruh baris perhitungan bulanan disimpan di `simulasi_detail` dan dapat dicetak sebagai lampiran, sehingga penguji bisa menelusuri angkanya satu per satu.
+4. **Revisi rumus skenario Sistem (2026-09-21).** Rumus awal (`forecast(t) + SS - stok_awal(t) - barang dalam proses`) hanya menetralkan permintaan satu bulan. Saat diuji dengan data penjualan asli yang waktu tunggunya lebih dari satu bulan, rumus ini menghasilkan pola pemesanan naik-turun tidak stabil (satu bulan pesan besar, bulan berikutnya tidak pesan sama sekali karena mengira kiriman yang sedang berjalan sudah cukup) sehingga skenario Sistem justru tampak lebih buruk daripada kebijakan lama perusahaan. Ini bukan karena implementasinya salah, tapi karena rumusnya belum memperhitungkan bahwa satu kali pesan harus menutupi seluruh rentang waktu tunggu, bukan cuma satu bulan.
+
+   Rumus diperbaiki menjadi menetralkan **total permintaan sepanjang waktu tunggu** (`CEIL(L_total/30) + 1` bulan ke depan, bukan cuma `forecast(t)`). Ini bukan rumus baru: bila `L_total <= 30 hari` (waktu tunggu satu bulan atau kurang), rumus revisi ini kembali persis sama dengan rumus awal, jadi rumus awal adalah kasus khusus dari rumus revisi ini.
 
 ---
 

@@ -14,19 +14,19 @@
 <div>
     <p class="{{ $headClass }}">Peramalan (ARIMA)</p>
     <div class="space-y-0.5">
-        <a href="#" class="{{ $itemClass }}">Data Historis</a>
-        <a href="#" class="{{ $itemClass }}">Proses Forecasting</a>
-        <a href="#" class="{{ $itemClass }}">Waktu Tunggu</a>
-        <a href="#" class="{{ $itemClass }}">Target Produksi</a>
+        <a href="{{ route('peramalan.historis.index') }}" class="{{ $itemClass }}">Data Historis</a>
+        <a href="{{ route('peramalan.forecasting.index') }}" class="{{ $itemClass }}">Proses Forecasting</a>
+        <a href="{{ route('peramalan.waktu-tunggu.index') }}" class="{{ $itemClass }}">Waktu Tunggu</a>
+        <a href="{{ route('peramalan.target.index') }}" class="{{ $itemClass }}">Target Produksi</a>
     </div>
 </div>
 
 <div>
     <p class="{{ $headClass }}">Simulasi &amp; Pengujian</p>
     <div class="space-y-0.5">
-        <a href="#" class="{{ $itemClass }}">Jalankan Simulasi</a>
-        <a href="#" class="{{ $itemClass }}">Perbandingan Skenario</a>
-        <a href="#" class="{{ $itemClass }}">Rincian Bulanan</a>
-        <a href="#" class="{{ $itemClass }}">Laporan Hasil Simulasi</a>
+        <a href="{{ route('simulasi.create') }}" class="{{ $itemClass }}">Jalankan Simulasi</a>
+        <a href="{{ route('simulasi.index') }}" class="{{ $itemClass }}">Perbandingan Skenario</a>
+        <a href="{{ route('simulasi.index') }}" class="{{ $itemClass }}">Rincian Bulanan</a>
+        <a href="{{ route('laporan.simulasi') }}" class="{{ $itemClass }}">Laporan Hasil Simulasi</a>
     </div>
 </div>
