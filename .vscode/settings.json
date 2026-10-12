@@ -17,8 +17,16 @@
     "*.blade.php": "blade"
   },
 
+  // CATATAN: "**/vendor" TIDAK boleh dimasukkan ke sini.
+  //
+  // Intelephense ikut mematuhi files.exclude saat membangun indeksnya, jadi
+  // menyembunyikan vendor/ membuat seluruh class Laravel tidak dikenali —
+  // Seeder, Model, Controller, bahkan $this->command semuanya dilaporkan
+  // "Undefined". Itu galat semu: kodenya tetap jalan, hanya IDE-nya yang buta.
+  //
+  // vendor/ tetap disembunyikan dari pencarian lewat search.exclude di bawah,
+  // jadi hasil Ctrl+Shift+F tetap bersih.
   "files.exclude": {
-    "**/vendor": true,
     "**/node_modules": true,
     "**/.git": true,
     "**/storage/framework": true,
@@ -42,5 +50,15 @@
     ".env": ".env.example, .env.testing"
   },
 
-  "intelephense.environment.phpVersion": "8.2.0"
+  "intelephense.environment.phpVersion": "8.2.0",
+
+  // Yang benar-benar tidak perlu diindeks Intelephense. vendor/ sengaja tidak
+  // ada di sini karena justru dari sanalah definisi class Laravel dibaca.
+  "intelephense.files.exclude": [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/storage/framework/**",
+    "**/bootstrap/cache/**",
+    "**/public/build/**"
+  ]
 }
