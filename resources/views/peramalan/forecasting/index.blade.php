@@ -90,7 +90,7 @@
                                     <td class="px-4 py-2 border-b border-gray-100">{{ $p->kode_peramalan }}</td>
                                     <td class="px-4 py-2 border-b border-gray-100">{{ $p->barang->nama_barang }}</td>
                                     <td class="px-4 py-2 border-b border-gray-100">{{ $p->nama_model }}</td>
-                                    <td class="px-4 py-2 border-b border-gray-100 text-right">{{ number_format($p->mape, 2) }}%</td>
+                                    <td class="px-4 py-2 border-b border-gray-100 text-right">{{ number_format($p->mape, 2, ',', '.') }}%</td>
                                     <td class="px-4 py-2 border-b border-gray-100">{{ $p->kategori_akurasi }}</td>
                                     <td class="px-4 py-2 border-b border-gray-100">{{ ucfirst($p->status) }}</td>
                                     <td class="px-4 py-2 border-b border-gray-100 text-right">

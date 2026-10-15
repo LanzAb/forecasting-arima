@@ -14,7 +14,7 @@ use Tests\TestCase;
  * Uji orkestrator 4 tahap Box-Jenkins end-to-end (docs/01 §5): dari data
  * penjualan mentah sampai baris tersimpan di seluruh tabel peramalan.
  * Fixture memakai 36 nilai penjualan riil BJ-01 (sudah diverifikasi manual
- * lewat tinker: model terpilih ARIMA(3,2,0), MAPE ~6.42%) supaya angka yang
+ * lewat tinker: model terpilih ARIMA(2,2,0) tanpa konstanta, MAPE ~7,01%; sebelum E1 ARIMA(3,2,0), MAPE ~6,42%) supaya angka yang
  * diasersikan bukan tebakan.
  */
 class BoxJenkinsPipelineTest extends TestCase
@@ -58,12 +58,13 @@ class BoxJenkinsPipelineTest extends TestCase
 
         $peramalan = (new BoxJenkinsPipeline())->jalankan($barang, horizon: 6);
 
-        $this->assertSame(3, $peramalan->ordo_p);
+        // [E1] d=2 -> konstanta tidak diestimasi, model terpilih bergeser dari (3,2,0) ke (2,2,0).
+        $this->assertSame(2, $peramalan->ordo_p);
         $this->assertSame(2, $peramalan->ordo_d);
         $this->assertSame(0, $peramalan->ordo_q);
         $this->assertSame('draft', $peramalan->status);
         $this->assertSame('Sangat Baik', $peramalan->kategori_akurasi);
-        $this->assertEqualsWithDelta(6.42, (float) $peramalan->mape, 0.1);
+        $this->assertEqualsWithDelta(7.01, (float) $peramalan->mape, 0.1);
     }
 
     public function test_pipeline_menyimpan_baris_ke_seluruh_tabel_terkait(): void
@@ -79,11 +80,12 @@ class BoxJenkinsPipelineTest extends TestCase
         $this->assertSame(16, $peramalan->kandidatModel()->count());
         $this->assertSame(1, $peramalan->kandidatModel()->where('is_terpilih', true)->count());
 
-        // ARIMA(3,2,0) terpilih -> parameter: konstanta + AR(1) + AR(2) + AR(3) = 4 baris.
-        $this->assertSame(4, $peramalan->parameterModel()->count());
+        // ARIMA(2,2,0) terpilih, d >= 1 tanpa konstanta -> parameter: AR(1) + AR(2) = 2 baris.
+        $this->assertSame(2, $peramalan->parameterModel()->count());
+        $this->assertFalse($peramalan->parameterModel()->where('jenis', 'KONSTANTA')->exists());
 
-        // hasil_peramalan: in_sample sebanyak n-(p+d)=36-5=31, forecast sebanyak horizon=6.
-        $this->assertSame(31, $peramalan->hasil()->where('tipe', 'in_sample')->count());
+        // hasil_peramalan: in_sample sebanyak n-(p+d)=36-4=32, forecast sebanyak horizon=6.
+        $this->assertSame(32, $peramalan->hasil()->where('tipe', 'in_sample')->count());
         $this->assertSame(6, $peramalan->hasil()->where('tipe', 'forecast')->count());
 
         // Baris forecast tidak boleh punya nilai aktual; baris in_sample harus punya.

@@ -70,6 +70,8 @@ class LeadTimeCalculatorTest extends TestCase
         $this->assertEqualsWithDelta(14.0, $hasil['lead_time_pembelian_hari'], 1e-9);
         $this->assertEqualsWithDelta(3.0, $hasil['lead_time_produksi_hari'], 1e-9);
         $this->assertEqualsWithDelta(17.0, $hasil['lead_time_total_hari'], 1e-9);
+        // [E2] 14 hari kalender + 3 hari kerja x 7/5 = 18,2 hari kalender.
+        $this->assertEqualsWithDelta(18.2, $hasil['lead_time_total_kalender_hari'], 1e-9);
     }
 
     public function test_tanggal_mundur_hari_kerja_untuk_produksi_dan_hari_kalender_untuk_beli_bahan(): void

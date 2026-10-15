@@ -37,7 +37,7 @@ class BoxJenkinsPipeline
 
         return DB::transaction(function () use ($barang, $deret, $horizon, $userId) {
             $identifikasi = $this->identifikasi($deret);
-            $estimasi = $this->estimasi($identifikasi['deret_stasioner']);
+            $estimasi = $this->estimasi($identifikasi['deret_stasioner'], $identifikasi['ordo_d']);
             $forecast = (new Forecaster())->forecast($deret, $identifikasi['ordo_d'], $estimasi['terpilih'], $horizon);
             $diagnostik = (new DiagnosticChecker())->ljungBox(
                 array_values($forecast['residual_in_sample']),
@@ -78,10 +78,11 @@ class BoxJenkinsPipeline
 
     /**
      * Tahap 2 (estimasi): grid search, ambil model dengan AIC terkecil.
+     * Konstanta hanya diestimasi bila d = 0.
      */
-    private function estimasi(array $deretStasioner): array
+    private function estimasi(array $deretStasioner, int $ordoD): array
     {
-        $grid = (new ArimaEstimator())->gridSearch($deretStasioner);
+        $grid = (new ArimaEstimator())->gridSearch($deretStasioner, denganKonstanta: $ordoD === 0);
         $terpilih = collect($grid)->firstWhere('is_terpilih', true);
 
         if ($terpilih === null) {

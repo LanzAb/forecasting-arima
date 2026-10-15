@@ -114,7 +114,11 @@
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Waktu Tunggu Total</p>
                         <p class="mt-1 text-sm text-gray-900">{{ number_format($detail->lead_time_total_hari, 0, ',', '.') }} hari</p>
-                        <p class="text-xs text-gray-500">beli bahan {{ number_format($detail->lead_time_pembelian_hari, 0) }} + produksi {{ number_format($detail->lead_time_produksi_hari, 0) }} hari kerja</p>
+                        @if ($detail->lead_time_pembelian_hari <= 0)
+                            <p class="text-xs text-gray-500">tidak perlu beli bahan, produksi {{ number_format($detail->lead_time_produksi_hari, 0) }} hari kerja</p>
+                        @else
+                            <p class="text-xs text-gray-500">beli bahan {{ number_format($detail->lead_time_pembelian_hari, 0) }} + produksi {{ number_format($detail->lead_time_produksi_hari, 0) }} hari kerja</p>
+                        @endif
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Status</p>
@@ -135,9 +139,15 @@
                         </div>
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Tanggal Pesan Bahan</p>
-                            <p class="mt-1 text-sm text-gray-900">{{ $detail->tanggal_pesan_bahan->format('Y-m-d') }}</p>
+                            <p class="mt-1 text-sm text-gray-900">{{ $detail->lead_time_pembelian_hari <= 0 ? 'Tidak perlu beli bahan' : $detail->tanggal_pesan_bahan->format('Y-m-d') }}</p>
                         </div>
                     </div>
+
+                    @if ($detail->status_approval === 'menunggu' && $detail->tanggal_mulai_produksi->lt(today()))
+                        <div class="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                            Tanggal mulai produksi ({{ $detail->tanggal_mulai_produksi->format('Y-m-d') }}) sudah lewat dari hari ini, jadi produksi tidak bisa dimulai tepat waktu.
+                        </div>
+                    @endif
                 @endif
 
                 @if ($kebutuhanSetengahJadi->isNotEmpty())

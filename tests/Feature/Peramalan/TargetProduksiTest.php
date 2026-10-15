@@ -9,6 +9,7 @@ use App\Models\Peramalan;
 use App\Models\TahapanProduksi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -148,5 +149,43 @@ class TargetProduksiTest extends TestCase
         $this->actingAs($this->pengguna())
             ->post(route('peramalan.target.hitung'), ['barang_id' => $barangJadi->id, 'periode' => '2026-06'])
             ->assertSessionHas('sukses', fn ($pesan) => str_contains($pesan, ' Dz') && ! str_contains($pesan, 'unit'));
+    }
+
+    public function test_detail_menampilkan_tidak_perlu_beli_bahan_bila_stok_cukup(): void
+    {
+        // [D3] stok bahan 1000 cukup -> L_beli 0.
+        ['peramalan' => $peramalan, 'barangJadi' => $barangJadi] = $this->skenario();
+        $target = (new \App\Services\Stok\TargetProduksiPlanner())->rencanakan($peramalan, '2026-06');
+
+        $this->actingAs($this->pengguna())
+            ->get(route('peramalan.target.index', ['barang' => $barangJadi->id, 'target' => $target->id]))
+            ->assertOk()
+            ->assertSee('Tidak perlu beli bahan')
+            ->assertSee('tidak perlu beli bahan, produksi');
+    }
+
+    public function test_peringatan_bila_tanggal_mulai_produksi_sudah_lewat(): void
+    {
+        // [D5] target periode 2026-06 menunggu persetujuan, hari ini sesudahnya.
+        ['peramalan' => $peramalan, 'barangJadi' => $barangJadi] = $this->skenario();
+        $target = (new \App\Services\Stok\TargetProduksiPlanner())->rencanakan($peramalan, '2026-06');
+        $url = route('peramalan.target.index', ['barang' => $barangJadi->id, 'target' => $target->id]);
+
+        Carbon::setTestNow('2026-06-15');
+        $this->actingAs($this->pengguna())->get($url)->assertOk()->assertSee('sudah lewat dari hari ini');
+
+        Carbon::setTestNow('2026-01-01');
+        $this->actingAs($this->pengguna())->get($url)->assertOk()->assertDontSee('sudah lewat dari hari ini');
+
+        // Target yang sudah disetujui tidak diberi peringatan.
+        $target->update(['status_approval' => 'disetujui']);
+        Carbon::setTestNow('2026-06-15');
+        $this->actingAs($this->pengguna())->get($url)->assertOk()->assertDontSee('sudah lewat dari hari ini');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 }

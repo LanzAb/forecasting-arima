@@ -54,9 +54,11 @@ class ForecastingController extends Controller
 
         LogAktivitas::catat(self::MODUL, "Menjalankan peramalan {$barang->nama_barang}: {$peramalan->nama_model}");
 
+        $mape = number_format((float) $peramalan->mape, 2, ',', '.');
+
         return redirect()
             ->route('peramalan.forecasting.show', $peramalan)
-            ->with('sukses', "Peramalan selesai: {$peramalan->nama_model}, MAPE {$peramalan->mape}% ({$peramalan->kategori_akurasi}).");
+            ->with('sukses', "Peramalan selesai: {$peramalan->nama_model}, MAPE {$mape}% ({$peramalan->kategori_akurasi}).");
     }
 
     public function show(Peramalan $peramalan): View

@@ -76,8 +76,10 @@ class SimulationRunnerTest extends TestCase
         // Regression-lock: dikonfirmasi via tinker (fixture identik) sebelum dikunci di sini.
         $this->assertEqualsWithDelta(2071.0, (float) $sim->pb_total_stockout_unit, 0.5);
         $this->assertEqualsWithDelta(544.0, (float) $sim->pb_total_overstock_unit, 0.5);
-        $this->assertEqualsWithDelta(2680.59, (float) $sim->sis_total_stockout_unit, 0.5);
-        $this->assertEqualsWithDelta(1019.58, (float) $sim->sis_total_overstock_unit, 0.5);
+        $this->assertEqualsWithDelta(9166.03, (float) $sim->sis_total_stockout_unit, 0.5);
+        // [E1] d=2 tanpa konstanta: prakiraan tumbuh linear, tidak kuadratik, jadi
+        // sistem cenderung kurang menaksir (stockout naik, overstock nol).
+        $this->assertEqualsWithDelta(0.0, (float) $sim->sis_total_overstock_unit, 0.5);
         $this->assertFalse($sim->is_sistem_lebih_baik);
     }
 

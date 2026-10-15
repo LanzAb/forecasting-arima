@@ -219,6 +219,10 @@ class LeadTimeCalculator
             'lead_time_pembelian_hari' => $leadTimePembelian,
             'lead_time_produksi_hari' => $leadTimeProduksi,
             'lead_time_total_hari' => $leadTimePembelian + $leadTimeProduksi,
+            // L_beli dihitung hari kalender, L_produksi hari kerja (5 dari 7 hari).
+            // Safety stock dan reorder point memakai hari kalender seragam
+            // karena permintaan dibagi 30 hari kalender per bulan.
+            'lead_time_total_kalender_hari' => $leadTimePembelian + $leadTimeProduksi * 7 / 5,
             'tanggal_mulai_produksi' => $tanggalMulaiProduksi,
             'tanggal_pesan_bahan' => $tanggalPesanBahan,
             'jalur_kritis_hari' => $kritis['waktu'] ?? 0.0,

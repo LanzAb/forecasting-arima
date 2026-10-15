@@ -79,10 +79,13 @@ class TargetProduksiPlannerTest extends TestCase
         // Stok bahan 5 kurang dari kebutuhan, L_beli = 7 -> L_total = 9.
         $sigmaError = sqrt(100.0);
         $leadTimeTotal = 2.0 + 7.0;
-        $ltPeriode = $leadTimeTotal / 30;
+        // [E2] safety stock dan reorder point memakai hari kalender seragam:
+        // L_beli 7 hari kalender + L_produksi 2 hari kerja x 7/5 = 9,8 hari.
+        $leadTimeKalender = 7.0 + 2.0 * 7 / 5;
+        $ltPeriode = $leadTimeKalender / 30;
         $nilaiZ = Distribution::zScore(0.95);
         $safetyStock = $nilaiZ * $sigmaError * sqrt($ltPeriode);
-        $reorderPoint = (50 / 30 * $leadTimeTotal) + $safetyStock;
+        $reorderPoint = (50 / 30 * $leadTimeKalender) + $safetyStock;
         $targetMentah = 50 + $safetyStock - 10 - 3; // prediksi + SS - stok barang jadi - stok setengah jadi
 
         $this->assertEqualsWithDelta($sigmaError, (float) $target->standar_deviasi_error, 1e-4);

@@ -27,7 +27,7 @@
             </div>
             <div class="bg-white shadow-sm sm:rounded-lg p-4">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">MAPE</p>
-                <p class="mt-1 text-xl font-semibold text-gray-900">{{ number_format($peramalan->mape, 2) }}%</p>
+                <p class="mt-1 text-xl font-semibold text-gray-900">{{ number_format($peramalan->mape, 2, ',', '.') }}%</p>
                 <p class="mt-1 text-xs text-gray-500">{{ $peramalan->kategori_akurasi }}</p>
             </div>
             <div class="bg-white shadow-sm sm:rounded-lg p-4">

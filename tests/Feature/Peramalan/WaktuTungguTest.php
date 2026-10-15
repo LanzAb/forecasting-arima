@@ -7,6 +7,7 @@ use App\Models\Bom;
 use App\Models\TahapanProduksi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
@@ -143,5 +144,95 @@ class WaktuTungguTest extends TestCase
             ->assertOk()
             ->assertSee('25 Pcs')
             ->assertDontSee('24,24');
+    }
+
+    public function test_admin_dan_produksi_melihat_keterangan_perhitungan_oleh_pimpinan(): void
+    {
+        // [D1] bukan halaman kosong.
+        foreach ([User::ROLE_ADMIN, User::ROLE_PRODUKSI] as $role) {
+            $this->actingAs(User::factory()->create(['role' => $role, 'is_aktif' => true]))
+                ->get(route('peramalan.waktu-tunggu.index'))
+                ->assertOk()
+                ->assertSee('dijalankan oleh Pimpinan');
+        }
+
+        $this->actingAs($this->pengguna())
+            ->get(route('peramalan.waktu-tunggu.index'))
+            ->assertDontSee('dijalankan oleh Pimpinan');
+    }
+
+    public function test_tampil_tidak_perlu_beli_bahan_bila_stok_cukup(): void
+    {
+        // [D2] stok bahan cukup -> L_beli 0.
+        $barang = $this->barangDenganBom();
+        Barang::where('id', '!=', $barang->id)->update(['stok_tersedia' => 1000]);
+
+        $this->actingAs($this->pengguna())
+            ->followingRedirects()
+            ->from(route('peramalan.waktu-tunggu.index'))
+            ->post(route('peramalan.waktu-tunggu.hitung'), [
+                'jumlah' => [$barang->id => 5],
+                'awal_periode' => '2026-12-01',
+                'periksa_stok' => '1',
+            ])
+            ->assertOk()
+            ->assertSee('Tidak perlu beli bahan');
+    }
+
+    public function test_tidak_ada_keterangan_tanpa_beli_bahan_bila_bahan_kurang(): void
+    {
+        $barang = $this->barangDenganBom();
+
+        $this->actingAs($this->pengguna())
+            ->followingRedirects()
+            ->from(route('peramalan.waktu-tunggu.index'))
+            ->post(route('peramalan.waktu-tunggu.hitung'), [
+                'jumlah' => [$barang->id => 5],
+                'awal_periode' => '2026-12-01',
+                'periksa_stok' => '1',
+            ])
+            ->assertOk()
+            ->assertDontSee('Tidak perlu beli bahan');
+    }
+
+    public function test_peringatan_bila_tanggal_mulai_produksi_sudah_lewat(): void
+    {
+        // [D4] hari ini 2026-12-15, mulai produksi jatuh 2026-11-30.
+        Carbon::setTestNow('2026-12-15');
+        $barang = $this->barangDenganBom();
+
+        $this->actingAs($this->pengguna())
+            ->followingRedirects()
+            ->from(route('peramalan.waktu-tunggu.index'))
+            ->post(route('peramalan.waktu-tunggu.hitung'), [
+                'jumlah' => [$barang->id => 5],
+                'awal_periode' => '2026-12-01',
+                'periksa_stok' => '1',
+            ])
+            ->assertOk()
+            ->assertSee('sudah lewat dari hari ini');
+    }
+
+    public function test_tanpa_peringatan_bila_tanggal_mulai_produksi_belum_lewat(): void
+    {
+        Carbon::setTestNow('2026-10-01');
+        $barang = $this->barangDenganBom();
+
+        $this->actingAs($this->pengguna())
+            ->followingRedirects()
+            ->from(route('peramalan.waktu-tunggu.index'))
+            ->post(route('peramalan.waktu-tunggu.hitung'), [
+                'jumlah' => [$barang->id => 5],
+                'awal_periode' => '2026-12-01',
+                'periksa_stok' => '1',
+            ])
+            ->assertOk()
+            ->assertDontSee('sudah lewat dari hari ini');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 }

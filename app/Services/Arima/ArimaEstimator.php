@@ -23,14 +23,16 @@ class ArimaEstimator
 {
     /**
      * @param  array<int, float>  $data  deret yang sudah stasioner (sudah di-differencing)
+     * @param  bool  $denganKonstanta  false untuk d >= 1: deret hasil differencing berpusat di nol,
+     *                                 jadi konstanta tidak diestimasi (kebiasaan Box-Jenkins dan statsmodels)
      * @return array{ordo_p: int, ordo_q: int, parameter: array<int, array<string, mixed>>, aic: float, bic: float, sse: float, sigma_kuadrat: float, semua_signifikan: bool, n: int, k: int}
      */
-    public function estimasi(array $data, int $p, int $q): array
+    public function estimasi(array $data, int $p, int $q, bool $denganKonstanta = true): array
     {
         $n = count($data);
         $z = fn (int $t): float => $data[$t - 1];
 
-        $residualProksi = $q > 0 ? $this->residualProksi($data, $p, $q) : [];
+        $residualProksi = $q > 0 ? $this->residualProksi($data, $p, $q, $denganKonstanta) : [];
 
         $mulai = $p + 1;
         if ($mulai > $n) {
@@ -40,7 +42,7 @@ class ArimaEstimator
         $x = [];
         $y = [];
         for ($t = $mulai; $t <= $n; $t++) {
-            $baris = [1.0];
+            $baris = $denganKonstanta ? [1.0] : [];
             for ($i = 1; $i <= $p; $i++) {
                 $baris[] = $z($t - $i);
             }
@@ -51,7 +53,10 @@ class ArimaEstimator
             $y[] = $z($t);
         }
 
-        $hasil = Matrix::ols($x, $y);
+        // ARIMA(0,d,0) tanpa konstanta tidak punya parameter: prediksinya nol.
+        $hasil = $x[0] === []
+            ? ['koefisien' => [], 'residual' => $y, 'standard_error' => [], 'n' => count($y), 'k' => 0]
+            : Matrix::ols($x, $y);
         $nObs = $hasil['n'];
         $k = $hasil['k'];
         $derajatBebas = $nObs - $k;
@@ -66,20 +71,23 @@ class ArimaEstimator
         $semuaSignifikan = true;
 
         foreach ($hasil['koefisien'] as $idx => $koef) {
-            if ($idx === 0) {
+            // Tanpa konstanta, kolom pertama sudah AR(1) atau MA(1).
+            $pos = $denganKonstanta ? $idx : $idx + 1;
+
+            if ($pos === 0) {
                 $jenis = 'KONSTANTA';
                 $lag = 0;
                 $nilaiKoef = $koef;
-            } elseif ($idx <= $p) {
+            } elseif ($pos <= $p) {
                 $jenis = 'AR';
-                $lag = $idx;
+                $lag = $pos;
                 $nilaiKoef = $koef;
             } else {
                 // Konvensi docs: theta(B) = 1 - theta_1 B - ... - theta_q B^q,
                 // sedangkan regresi ini memakai +koefisien pada residual proksi,
                 // jadi theta_j = -koefisien hasil regresi.
                 $jenis = 'MA';
-                $lag = $idx - $p;
+                $lag = $pos - $p;
                 $nilaiKoef = -$koef;
             }
 
@@ -131,14 +139,14 @@ class ArimaEstimator
      * @param  array<int, float>  $data  deret yang sudah stasioner
      * @return array<int, array<string, mixed>>
      */
-    public function gridSearch(array $data, int $pMax = 3, int $qMax = 3): array
+    public function gridSearch(array $data, int $pMax = 3, int $qMax = 3, bool $denganKonstanta = true): array
     {
         $kandidat = [];
 
         for ($p = 0; $p <= $pMax; $p++) {
             for ($q = 0; $q <= $qMax; $q++) {
                 try {
-                    $kandidat[] = $this->estimasi($data, $p, $q);
+                    $kandidat[] = $this->estimasi($data, $p, $q, $denganKonstanta);
                 } catch (Throwable) {
                     continue;
                 }
@@ -211,7 +219,7 @@ class ArimaEstimator
      * @param  array<int, float>  $data
      * @return array<int, float> t (1-based) => residual
      */
-    private function residualProksi(array $data, int $p, int $q): array
+    private function residualProksi(array $data, int $p, int $q, bool $denganKonstanta): array
     {
         $n = count($data);
         $m = max($p, $q) + 2;
@@ -224,7 +232,7 @@ class ArimaEstimator
         $y = [];
         $daftarT = [];
         for ($t = $m + 1; $t <= $n; $t++) {
-            $baris = [1.0];
+            $baris = $denganKonstanta ? [1.0] : [];
             for ($i = 1; $i <= $m; $i++) {
                 $baris[] = $z($t - $i);
             }

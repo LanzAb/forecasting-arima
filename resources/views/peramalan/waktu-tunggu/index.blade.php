@@ -68,10 +68,18 @@
                     </form>
                 @endif
             </div>
+        @else
+            <div class="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                Perhitungan waktu tunggu dijalankan oleh Pimpinan. Hasil perhitungan akan tampil di halaman ini saat Pimpinan menghitungnya.
+            </div>
         @endif
 
         @if (session('hasil'))
-            @php $hasil = session('hasil'); @endphp
+            @php
+                $hasil = session('hasil');
+                $mulaiProduksi = \Illuminate\Support\Carbon::parse($hasil['tanggal_mulai_produksi']);
+                $tanpaBeliBahan = $hasil['lead_time_pembelian_hari'] <= 0;
+            @endphp
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <h3 class="text-sm font-semibold text-gray-900">Hasil</h3>
                 <p class="mt-1 text-sm text-gray-600">
@@ -84,6 +92,9 @@
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">L_beli (beli bahan)</p>
                         <p class="mt-1 text-xl font-semibold text-gray-900">{{ $angka($hasil['lead_time_pembelian_hari']) }} hari</p>
+                        @if ($tanpaBeliBahan)
+                            <p class="text-xs text-gray-500">Tidak perlu beli bahan</p>
+                        @endif
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">L_produksi (hari kerja)</p>
@@ -102,9 +113,16 @@
                     </div>
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Tanggal Pesan Bahan</p>
-                        <p class="mt-1 text-sm text-gray-900">{{ $hasil['tanggal_pesan_bahan'] }}</p>
+                        <p class="mt-1 text-sm text-gray-900">{{ $tanpaBeliBahan ? 'Tidak perlu beli bahan' : $hasil['tanggal_pesan_bahan'] }}</p>
                     </div>
                 </div>
+
+                @if ($mulaiProduksi->lt(today()))
+                    <div class="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        Tanggal mulai produksi ({{ $hasil['tanggal_mulai_produksi'] }}) sudah lewat dari hari ini, jadi produksi tidak bisa dimulai tepat waktu.
+                        Pilih awal periode yang lebih akhir atau percepat waktu tunggu.
+                    </div>
+                @endif
 
                 <div class="mt-4 rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
                     L_produksi = jalur kritis {{ $angka($hasil['jalur_kritis_hari']) }} hari

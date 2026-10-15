@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Selesai kecuali T12 (user guide) |
+| Status | Selesai kecuali T12 dan F4 (user guide belum ada di repositori) |
 | Dibuat | 15 Oktober 2026 |
 | Sumber kebutuhan | Masukan Emi (proses produksi CV. Pande Sejahtera), 14 sampai 15 Oktober 2026 |
 | Modul terdampak | Master Barang dan Tahapan, Penjualan, Peramalan (Waktu Tunggu, Target Produksi), Simulasi, seeder data |
@@ -200,28 +200,51 @@ Setiap butir di bawah adalah **satu perubahan kecil**, dengan berkas yang disent
 
 ### D. Masukan UX ringan
 
-- [ ] **D1.** Waktu Tunggu: Admin dan Produksi melihat keterangan bahwa perhitungan dijalankan Pimpinan, bukan halaman kosong.
+- [x] **D1.** Waktu Tunggu: Admin dan Produksi melihat keterangan bahwa perhitungan dijalankan Pimpinan, bukan halaman kosong.
   Berkas: `peramalan/waktu-tunggu/index.blade.php`.
-- [ ] **D2.** Waktu Tunggu: tampil "tidak perlu beli bahan" bila waktu beli bahan 0.
+- [x] **D2.** Waktu Tunggu: tampil "tidak perlu beli bahan" bila waktu beli bahan 0.
   Berkas: `peramalan/waktu-tunggu/index.blade.php`.
-- [ ] **D3.** Target Produksi: tampil "tidak perlu beli bahan" bila waktu beli bahan 0.
+- [x] **D3.** Target Produksi: tampil "tidak perlu beli bahan" bila waktu beli bahan 0.
   Berkas: `peramalan/target/index.blade.php`.
-- [ ] **D4.** Waktu Tunggu: peringatan bila tanggal mulai produksi sudah lewat dari hari ini.
+- [x] **D4.** Waktu Tunggu: peringatan bila tanggal mulai produksi sudah lewat dari hari ini.
   Berkas: `peramalan/waktu-tunggu/index.blade.php`.
-- [ ] **D5.** Target Produksi: peringatan bila tanggal mulai produksi sudah lewat dari hari ini.
+- [x] **D5.** Target Produksi: peringatan bila tanggal mulai produksi sudah lewat dari hari ini.
   Berkas: `peramalan/target/index.blade.php`.
 
 ### E. Butuh keputusan
 
-- [ ] **E1.** ARIMA tanpa konstanta bila d ≥ 1, sesuai kebiasaan Box-Jenkins dan bawaan statsmodels. Memperbaiki prakiraan simulasi yang meledak, tetapi hasil peramalan dan simulasi berubah.
-- [ ] **E2.** (Opsional) Safety stock memakai satuan hari yang seragam.
+- [x] **E1.** ARIMA tanpa konstanta bila d ≥ 1, sesuai kebiasaan Box-Jenkins dan bawaan statsmodels. Memperbaiki prakiraan simulasi yang meledak, tetapi hasil peramalan dan simulasi berubah.
+  Berkas: `ArimaEstimator.php`, `BoxJenkinsPipeline.php`, `SimulationRunner.php`. Data pabrik (keempat produk d = 0) tidak berubah. Pada fixture uji d = 2: model bergeser dari ARIMA(3,2,0) ke (2,2,0), MAPE 6,42% menjadi 7,01%, stockout simulasi sistem naik dari 2.681 ke 9.166 unit dan overstock turun ke 0 (prakiraan tumbuh linear, bukan kuadratik, sehingga cenderung kurang menaksir).
+- [x] **E2.** (Opsional) Safety stock memakai satuan hari yang seragam.
+  Berkas: `LeadTimeCalculator.php` (kunci baru `lead_time_total_kalender_hari` = L_beli + L_produksi x 7/5), `TargetProduksiPlanner.php`, `SimulationRunner.php`. Safety stock, reorder point, dan jeda simulasi memakai hari kalender. Angka L_beli, L_produksi, L_total yang tampil tidak berubah.
 - [ ] **E3.** (Opsional) Pesan validasi dalam Bahasa Indonesia.
-- [ ] **E4.** (Opsional) MAPE ditulis dengan koma.
+- [x] **E4.** (Opsional) MAPE ditulis dengan koma.
+  Berkas: halaman Forecasting (daftar dan detail) dan pesan sukses `ForecastingController.php`.
 - [ ] **E5.** (Opsional) Nilai penjualan di dashboard disembunyikan dari Produksi dan Gudang.
 
 ### F. Penutup
 
-- [ ] **F1.** Seluruh test lolos.
-- [ ] **F2.** QA ulang singkat untuk butir A sampai D.
-- [ ] **F3.** Perbarui PRD, lalu commit dan push.
-- [ ] **F4.** Perbarui user guide (T12).
+- [x] **F1.** Seluruh test lolos (401 test, setelah D dan E).
+- [x] **F2.** QA ulang singkat untuk butir A sampai D. Hasil di bagian 13.
+- [x] **F3.** Perbarui PRD, lalu commit dan push.
+- [ ] **F4.** Perbarui user guide (T12). Tertahan: berkas user guide tidak ada di repositori LanzAb maupun Enjoy90, jadi perlu diketahui lokasinya.
+
+## 13. Hasil QA Ulang (15 Oktober 2026, setelah D dan E)
+
+Data sungguhan di-seed ke database uji (`db_peramalan_pande_test`, bukan database kerja), lalu dicek lewat skrip dan permintaan halaman per peran.
+
+| Pemeriksaan | Hasil |
+|---|---|
+| Contoh bagian 6, bahan dibeli semua | 2 dz: 3 hari produksi, total 17. 56 dz: 3 dan 17. 1.000 dz: 17 dan 31 |
+| 1.000 dz dengan cek stok bahan | L_beli 10, total 27 hari (hanya sebagian bahan kurang) |
+| 2 dz dan 56 dz dengan cek stok | Semua bahan cukup, L_beli 0, total 3 hari |
+| Total penjualan | 47.384 dz |
+| ARIMA per produk | BJ-01 (2,0,0) 12,77%, BJ-02 (2,0,1) 9,33%, BJ-03 (2,0,0) 10,60%, BJ-04 (2,0,1) 9,22%. Sama dengan sebelum E1, karena semuanya d = 0 |
+| Prakiraan Oktober 2026 | BJ-01 771, BJ-02 203, BJ-03 453, BJ-04 181 dz |
+| Target Oktober 2026 (pakai hari kalender seragam, E2) | BJ-01 589 dz, BJ-02 142, BJ-03 344, BJ-04 124 |
+| D1, Waktu Tunggu per peran | Admin dan Produksi melihat keterangan Pimpinan, tanpa formulir. Pimpinan melihat formulir. Gudang 403 |
+| D4 dan D5 | Peringatan tampil, karena tanggal mulai produksi target Oktober (11 September) sudah lewat |
+| D2 dan D3 | Tidak muncul pada data ini karena L_beli bukan 0. Terverifikasi lewat test |
+| Master Tahapan | Dari nol 3 hari kerja, penghambat Proses Coating |
+| MAPE di daftar Forecasting | 9,22 12,77 9,33 10,60 (koma desimal) |
+| Seluruh test | 401 lolos |

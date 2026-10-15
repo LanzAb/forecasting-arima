@@ -51,10 +51,11 @@ class TargetProduksiPlanner
             $this->bebanProdukLain($barang, $periode)
         );
 
-        $ltPeriode = $waktuTunggu['lead_time_total_hari'] / 30;
+        $ltKalender = $waktuTunggu['lead_time_total_kalender_hari'];
+        $ltPeriode = $ltKalender / 30;
         $nilaiZ = Distribution::zScore((float) $barang->service_level / 100);
         $safetyStock = $nilaiZ * $sigmaError * sqrt($ltPeriode);
-        $reorderPoint = ($prediksiPenjualan / 30 * $waktuTunggu['lead_time_total_hari']) + $safetyStock;
+        $reorderPoint = ($prediksiPenjualan / 30 * $ltKalender) + $safetyStock;
 
         $stokBarangJadi = (float) $barang->stok_tersedia;
         $stokSetengahJadi = $this->stokSetengahJadiSiapRakit($barang);

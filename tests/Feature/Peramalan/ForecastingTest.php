@@ -83,7 +83,7 @@ class ForecastingTest extends TestCase
         $peramalan = Peramalan::first();
         $response->assertRedirect(route('peramalan.forecasting.show', $peramalan));
         $response->assertSessionHas('sukses');
-        $this->assertSame(3, $peramalan->ordo_p);
+        $this->assertSame(2, $peramalan->ordo_p); // [E1] bergeser dari (3,2,0) karena d=2 tanpa konstanta
         $this->assertSame(2, $peramalan->ordo_d);
     }
 
@@ -130,7 +130,9 @@ class ForecastingTest extends TestCase
             ->assertSee('Uji Stasioneritas')
             ->assertSee('Kandidat Model')
             ->assertSee('Parameter Model Terpilih')
-            ->assertSee('Aktual vs Prediksi');
+            ->assertSee('Aktual vs Prediksi')
+            // [E4] MAPE memakai koma desimal.
+            ->assertSee(number_format((float) $peramalan->mape, 2, ',', '.').'%');
     }
 
     public function test_unduh_menghasilkan_file_excel_berisi_hasil_forecast(): void

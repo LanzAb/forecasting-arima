@@ -92,6 +92,44 @@ class ArimaEstimatorTest extends TestCase
         $this->estimator->estimasi([1.0, 2.0], 3, 0);
     }
 
+    public function test_estimasi_tanpa_konstanta_tidak_punya_parameter_konstanta(): void
+    {
+        // [E1] untuk d >= 1: kolom pertama langsung AR(1), k = jumlah AR + MA.
+        $hasil = $this->estimator->estimasi($this->ar1Sintetis, 1, 0, false);
+
+        $this->assertSame(1, $hasil['k']);
+        $this->assertCount(1, $hasil['parameter']);
+        $this->assertSame('AR', $hasil['parameter'][0]['jenis']);
+        $this->assertSame(1, $hasil['parameter'][0]['lag']);
+        $this->assertGreaterThan(0.2, $hasil['parameter'][0]['koefisien']);
+        $this->assertLessThan(0.8, $hasil['parameter'][0]['koefisien']);
+
+        $ma = $this->estimator->estimasi($this->ar1Sintetis, 0, 1, false);
+        $this->assertSame('MA', $ma['parameter'][0]['jenis']);
+        $this->assertSame(1, $ma['parameter'][0]['lag']);
+    }
+
+    public function test_estimasi_arima_nol_tanpa_konstanta_tanpa_parameter(): void
+    {
+        // [E1] (0,d,0) tanpa konstanta: prediksi nol, SSE = jumlah kuadrat deret.
+        $hasil = $this->estimator->estimasi([1.0, -2.0, 3.0, -1.0], 0, 0, false);
+
+        $this->assertSame([], $hasil['parameter']);
+        $this->assertSame(0, $hasil['k']);
+        $this->assertEqualsWithDelta(15.0, $hasil['sse'], 1e-9);
+    }
+
+    public function test_grid_search_tanpa_konstanta_tidak_menghasilkan_parameter_konstanta(): void
+    {
+        $grid = $this->estimator->gridSearch($this->ar1Sintetis, 2, 1, false);
+
+        $this->assertCount(6, $grid);
+        foreach ($grid as $kandidat) {
+            $this->assertNotContains('KONSTANTA', array_column($kandidat['parameter'], 'jenis'));
+            $this->assertSame($kandidat['ordo_p'] + $kandidat['ordo_q'], $kandidat['k']);
+        }
+    }
+
     public function test_grid_search_mengembalikan_seluruh_kombinasi_p_dan_q(): void
     {
         $grid = $this->estimator->gridSearch($this->ar1Sintetis, 2, 1);

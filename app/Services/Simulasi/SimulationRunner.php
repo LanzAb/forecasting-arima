@@ -51,7 +51,7 @@ class SimulationRunner
         // Tahap 1-2 Box-Jenkins HANYA pada 24 bulan in-sample (docs/01 §7.5:
         // model tidak boleh melihat 12 bulan terakhir saat dibentuk).
         $ordo = (new StationarityTest())->tentukanOrdo($inSample);
-        $grid = (new ArimaEstimator())->gridSearch($ordo['deret_stasioner']);
+        $grid = (new ArimaEstimator())->gridSearch($ordo['deret_stasioner'], denganKonstanta: $ordo['ordo_d'] === 0);
         $terpilih = collect($grid)->firstWhere('is_terpilih', true);
         if ($terpilih === null) {
             throw new RuntimeException('Tidak ada model ARIMA yang berhasil diestimasi dari data in-sample.');
@@ -66,9 +66,12 @@ class SimulationRunner
         $jumlahRataRata = array_sum($inSample) / count($inSample);
         // Stok bahan di masa lalu tidak diketahui, jadi waktu beli bahan dihitung
         // penuh (tanpa pemeriksaan stok saat ini).
-        $leadTimeTotal = (new LeadTimeCalculator())->hitung($barang, $jumlahRataRata, null, [], false)['lead_time_total_hari'];
-        $safetyStock = $nilaiZ * $sigmaError * sqrt($leadTimeTotal / 30);
-        $delay = (int) ceil($leadTimeTotal / 30);
+        $waktuTunggu = (new LeadTimeCalculator())->hitung($barang, $jumlahRataRata, null, [], false);
+        $leadTimeTotal = $waktuTunggu['lead_time_total_hari'];
+        // Safety stock dan jeda bulan memakai hari kalender seragam (lihat LeadTimeCalculator).
+        $leadTimeKalender = $waktuTunggu['lead_time_total_kalender_hari'];
+        $safetyStock = $nilaiZ * $sigmaError * sqrt($leadTimeKalender / 30);
+        $delay = (int) ceil($leadTimeKalender / 30);
 
         // Forecast diperpanjang $delay bulan supaya rencana_produksi bisa
         // menetralkan permintaan SEPANJANG waktu tunggu (docs/01 §7.2 & §7.5
