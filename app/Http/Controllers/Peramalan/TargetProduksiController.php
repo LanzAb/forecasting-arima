@@ -7,6 +7,7 @@ use App\Models\Barang;
 use App\Models\LogAktivitas;
 use App\Models\Peramalan;
 use App\Models\TargetProduksi;
+use App\Services\Produksi\BomExploder;
 use App\Services\Stok\TargetProduksiPlanner;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class TargetProduksiController extends Controller
     {
         $daftarBarang = Barang::diramalkan()->aktif()->orderBy('kode_barang')->get();
 
-        $barangId = $request->query('barang');
+        $barangId = $this->idDariQuery($request, 'barang');
         $periodeForecast = collect();
         if ($barangId) {
             $peramalanTerbaru = Peramalan::where('barang_id', $barangId)->latest()->first();
@@ -37,18 +38,46 @@ class TargetProduksiController extends Controller
             }
         }
 
-        $targetId = $request->query('target');
+        $targetId = $this->idDariQuery($request, 'target');
         $detail = $targetId
             ? TargetProduksi::with(['barang', 'kebutuhanBahan.barang'])->find($targetId)
             : null;
 
+        $kebutuhanSetengahJadi = collect();
+        if ($detail !== null && (float) $detail->jumlah_target_produksi > 0) {
+            $kebutuhan = collect((new BomExploder())->ledakkan($detail->barang, (float) $detail->jumlah_target_produksi)['setengah_jadi']);
+            $barangSj = Barang::whereIn('id', $kebutuhan->pluck('barang_id'))->get()->keyBy('id');
+            $kebutuhanSetengahJadi = $kebutuhan
+                ->map(fn ($k) => [
+                    'kode_barang' => $barangSj[$k['barang_id']]->kode_barang,
+                    'nama_barang' => $barangSj[$k['barang_id']]->nama_barang,
+                    'satuan' => $barangSj[$k['barang_id']]->satuan,
+                    'stok_tersedia' => (float) $barangSj[$k['barang_id']]->stok_tersedia,
+                    'jumlah' => $k['jumlah'],
+                ])
+                ->sortBy('kode_barang')
+                ->values();
+        }
+
         return view('peramalan.target.index', [
+            'kebutuhanSetengahJadi' => $kebutuhanSetengahJadi,
             'daftarBarang' => $daftarBarang,
             'barangId' => $barangId,
             'periodeForecast' => $periodeForecast,
             'riwayat' => TargetProduksi::with('barang')->latest()->paginate(15),
             'detail' => $detail,
         ]);
+    }
+
+    /**
+     * Id dari query string; nilai yang bukan bilangan bulat positif (larik,
+     * teks) dianggap tidak diisi supaya halaman tidak galat.
+     */
+    private function idDariQuery(Request $request, string $kunci): ?int
+    {
+        $nilai = $request->query($kunci);
+
+        return is_string($nilai) && ctype_digit($nilai) && (int) $nilai > 0 ? (int) $nilai : null;
     }
 
     public function hitung(Request $request): RedirectResponse
@@ -69,14 +98,16 @@ class TargetProduksiController extends Controller
             return back()->with('gagal', $e->getMessage());
         }
 
+        $jumlah = number_format((float) $target->jumlah_target_produksi, 0, ',', '.').' '.$peramalan->barang->satuan;
+
         LogAktivitas::catat(
             self::MODUL,
-            "Menghitung target produksi {$peramalan->barang->nama_barang} periode {$data['periode']}: {$target->jumlah_target_produksi} unit"
+            "Menghitung target produksi {$peramalan->barang->nama_barang} periode {$data['periode']}: {$jumlah}"
         );
 
         return redirect()
             ->route('peramalan.target.index', ['barang' => $data['barang_id'], 'target' => $target->id])
-            ->with('sukses', "Target produksi dihitung: {$target->jumlah_target_produksi} unit ({$target->status_stok}).");
+            ->with('sukses', "Target produksi dihitung: {$jumlah} ({$target->status_stok}).");
     }
 
     public function setujui(TargetProduksi $target): RedirectResponse

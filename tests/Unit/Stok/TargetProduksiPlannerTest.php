@@ -73,11 +73,12 @@ class TargetProduksiPlannerTest extends TestCase
 
         $target = (new TargetProduksiPlanner())->rencanakan($peramalan, '2026-06');
 
-        // Tahapan kapasitas 1000 tidak menambah hari: L_produksi=1 (waktu_proses saja,
-        // dua level BOM sama-sama pakai tahapan ini jadi terakumulasi jadi satu baris).
-        // L_beli=7 (lead time bahan baku) -> L_total=8.
+        // Tahapan kapasitas 1000 tidak menambah hari. Rantai BOM punya dua langkah
+        // berurutan (komponen lalu perakitan) masing-masing 1 hari, dan jumlah 50 di
+        // bawah kapasitas sehingga tidak ada tumpang tindih: L_produksi = 2.
+        // Stok bahan 5 kurang dari kebutuhan, L_beli = 7 -> L_total = 9.
         $sigmaError = sqrt(100.0);
-        $leadTimeTotal = 1.0 + 7.0;
+        $leadTimeTotal = 2.0 + 7.0;
         $ltPeriode = $leadTimeTotal / 30;
         $nilaiZ = Distribution::zScore(0.95);
         $safetyStock = $nilaiZ * $sigmaError * sqrt($ltPeriode);
@@ -169,5 +170,27 @@ class TargetProduksiPlannerTest extends TestCase
         $this->assertSame($pertama->id, $kedua->id);
         $this->assertDatabaseCount('target_produksi', 1);
         $this->assertCount(1, $kedua->kebutuhanBahan);
+    }
+
+    public function test_produk_lain_tanpa_resep_aktif_tidak_menggagalkan_target(): void
+    {
+        // [K] produk lain punya prakiraan periode yang sama, tetapi tidak punya resep aktif.
+        ['peramalan' => $peramalan] = $this->skenario();
+        $tanpaResep = Barang::factory()->barangJadi()->create();
+        $peramalanLain = Peramalan::create([
+            'kode_peramalan' => 'PRM-UJI-'.uniqid(),
+            'barang_id' => $tanpaResep->id,
+            'periode_awal' => '2024-01', 'periode_akhir' => '2026-05', 'jumlah_data' => 29,
+            'ordo_p' => 1, 'ordo_d' => 0, 'ordo_q' => 0,
+            'sigma_kuadrat' => 100, 'horizon' => 3, 'status' => 'draft',
+        ]);
+        HasilPeramalan::create([
+            'peramalan_id' => $peramalanLain->id, 'periode' => '2026-06', 'urutan_t' => 30,
+            'tipe' => 'forecast', 'nilai_prediksi' => 40,
+        ]);
+
+        $target = (new TargetProduksiPlanner())->rencanakan($peramalan, '2026-06');
+
+        $this->assertEqualsWithDelta(9.0, (float) $target->lead_time_total_hari, 1e-6);
     }
 }
