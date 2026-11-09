@@ -110,6 +110,13 @@ class ArimaEstimator
             ];
         }
 
+        // Model tanpa parameter (ARIMA(0,d,0) tanpa konstanta) tidak punya apa
+        // pun yang bisa diuji. Jangan dianggap "semua signifikan" secara kosong,
+        // kalau tidak ia menyalip model yang jauh lebih baik di urutan prioritas.
+        if ($parameter === []) {
+            $semuaSignifikan = false;
+        }
+
         $phi = array_column(array_filter($parameter, fn ($par) => $par['jenis'] === 'AR'), 'koefisien');
         $theta = array_column(array_filter($parameter, fn ($par) => $par['jenis'] === 'MA'), 'koefisien');
 

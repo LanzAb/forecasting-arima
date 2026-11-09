@@ -119,6 +119,23 @@ class ArimaEstimatorTest extends TestCase
         $this->assertEqualsWithDelta(15.0, $hasil['sse'], 1e-9);
     }
 
+    public function test_model_tanpa_parameter_tidak_dianggap_semua_signifikan(): void
+    {
+        $hasil = $this->estimator->estimasi([1.0, -2.0, 3.0, -1.0], 0, 0, false);
+
+        $this->assertFalse($hasil['semua_signifikan']);
+    }
+
+    public function test_grid_search_tanpa_konstanta_tidak_memilih_model_tanpa_parameter_secara_otomatis(): void
+    {
+        // Deret AR(1) jelas punya struktur: (0,0) tanpa parameter tidak boleh menang
+        // hanya karena lolos syarat "semua signifikan" secara kosong.
+        $grid = $this->estimator->gridSearch($this->ar1Sintetis, 2, 1, false);
+        $terpilih = collect($grid)->firstWhere('is_terpilih', true);
+
+        $this->assertGreaterThan(0, $terpilih['k']);
+    }
+
     public function test_grid_search_tanpa_konstanta_tidak_menghasilkan_parameter_konstanta(): void
     {
         $grid = $this->estimator->gridSearch($this->ar1Sintetis, 2, 1, false);

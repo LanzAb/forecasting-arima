@@ -50,7 +50,10 @@ class SimulationRunner
 
         // Tahap 1-2 Box-Jenkins HANYA pada 24 bulan in-sample (docs/01 §7.5:
         // model tidak boleh melihat 12 bulan terakhir saat dibentuk).
-        $ordo = (new StationarityTest())->tentukanOrdo($inSample);
+        // d dibatasi 1: uji ADF pada 24 titik berdaya lemah, dan bila ia tidak pernah lolos
+        // d = 2 menarik garis lurus dari lonjakan terakhir tanpa batas, sehingga prakiraan
+        // 12 bulan menjauh dari permintaan dan stok menumpuk.
+        $ordo = (new StationarityTest())->tentukanOrdo($inSample, maxD: 1);
         $grid = (new ArimaEstimator())->gridSearch($ordo['deret_stasioner'], denganKonstanta: $ordo['ordo_d'] === 0);
         $terpilih = collect($grid)->firstWhere('is_terpilih', true);
         if ($terpilih === null) {

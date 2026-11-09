@@ -248,3 +248,25 @@ Data sungguhan di-seed ke database uji (`db_peramalan_pande_test`, bukan databas
 | Master Tahapan | Dari nol 3 hari kerja, penghambat Proses Coating |
 | MAPE di daftar Forecasting | 9,22 12,77 9,33 10,60 (koma desimal) |
 | Seluruh test | 401 lolos |
+
+## 14. Perbaikan Simulasi Setelah QA Ulang (15 Oktober 2026)
+
+Simulasi pada data sungguhan (12 bulan uji, Okt 2025 sampai Sep 2026) menunjukkan stok sistem menumpuk.
+
+| Temuan | Penyebab | Perbaikan |
+|---|---|---|
+| Model ARIMA(0,2,0) terpilih padahal AIC terburuk | Model tanpa parameter lolos syarat "semua signifikan" secara kosong, efek samping E1 | `ArimaEstimator`: model tanpa parameter tidak dianggap semua signifikan |
+| Prakiraan BJ-01 naik dari 701 sampai 2.180 dz, aktual 409 sampai 860 | Uji ADF pada 24 titik tidak pernah lolos, d dipaksa 2 sehingga tren terakhir diekstrapolasi tanpa batas | `SimulationRunner`: d dibatasi paling tinggi 1. Pipeline Forecasting utama tidak diubah (data pabrik d = 0) |
+
+Hasil simulasi pada data seeder (pembanding naif bulan lalu, stok awal rata-rata 3 bulan, biaya simpan 1.000 dan stockout 5.000 per unit adalah asumsi):
+
+| Produk | Stockout perusahaan / sistem | Overstock perusahaan / sistem |
+|---|---|---|
+| BJ-01 | 699 / 886 | 1.616 / 0 |
+| BJ-02 | 179 / 117 | 680 / 329 |
+| BJ-03 | 420 / 376 | 903 / 272 |
+| BJ-04 | 166 / 109 | 718 / 572 |
+
+Sistem lebih baik pada BJ-02 sampai BJ-04 (stockout dan overstock sama-sama turun). Pada BJ-01 overstock hilang tetapi stockout naik terhadap pembanding naif, dan lebih baik terhadap pembanding rata-rata bergerak.
+
+Catatan jujur: batas d = 1 dipilih setelah melihat hasil simulasi pertama, jadi harus ditulis sebagai keputusan desain dengan alasan statistik (daya uji ADF lemah pada 24 titik), bukan hasil penalaan yang netral. Data penjualan di seeder adalah data simulasi, bukan penjualan asli.
